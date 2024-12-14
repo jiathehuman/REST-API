@@ -1,25 +1,91 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
+from rest_framework import mixins
+from rest_framework import generics
+
 from .models import *
 from .serializers import *
 
-# Create your views here.
-@csrf_exempt
-def offense_type_list(request):
+# Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
+
+class OffenseTypeList(generics.ListCreateAPIView):
     """
     List all offense types, or create a new offense type
     """
-    if request.method == 'GET':
-        offense_types = Offense_type.objects.all()
-        serializer = Offense_typeSerializer(offense_types, many = True)
-        return JsonResponse(serializer.data, safe=False)
+    queryset = OffenseType.objects.all()
+    serializer_class = OffenseTypeSerializer
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = Offense_typeSerializer(data = data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status = 201)
-        return JsonResponse(serializer.errors, status = 400)
+
+class OffenseTypeDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete an offense type.
+    """
+    queryset = OffenseType.objects.all()
+    serializer_class = OffenseTypeSerializer
+
+class CrimeList(generics.ListCreateAPIView):
+    """
+    Get list of crimes.
+    """
+    queryset = Crime.objects.all()[:10]
+    serializer_class = CrimeSerializer
+
+class HighCollarCrimeList(mixins.ListModelMixin,
+                  mixins.CreateModelMixin,
+                  generics.GenericAPIView):
+    """"
+    List of high collar crimes.
+    """
+    queryset = Crime.objects.filter(offense_type__offense_type_short__exact = 'probation-violation')
+    serializer_class = CrimeSerializer
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+class LocationList(generics.ListCreateAPIView):
+    """"
+    List of high collar crimes.
+    """
+    queryset = Location.objects.all()[:10]
+    # queryset = Location.objects.filter(neighbourhood__name__exact = 'virginia-village')
+    serializer_class = LocationSerializer
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+# class OffenseTypeList(mixins.ListModelMixin,
+#                   mixins.CreateModelMixin,
+#                   generics.GenericAPIView):
+#     """
+#     List all offense types, or create a new offense type
+#     """
+#     queryset = Offense_type.objects.all()
+#     serializer_class = OffenseTypeSerializer
+
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+#     def post(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+
+# class OffenseTypeDetail(mixins.RetrieveModelMixin,
+#                     mixins.UpdateModelMixin,
+#                     mixins.DestroyModelMixin,
+#                     generics.GenericAPIView):
+#     """
+#     Retrieve, update or delete an offense type.
+#     """
+#     queryset = Offense_type.objects.all()
+#     serializer_class = OffenseTypeSerializer
+
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+#     def put(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+#     def delete(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)

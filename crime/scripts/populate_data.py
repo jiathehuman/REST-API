@@ -62,24 +62,24 @@ crime_rows = {}
 Crime.objects.all().delete()
 Location.objects.all().delete()
 Geolocation.objects.all().delete()
-Offense_type.objects.all().delete()
-Offense_category.objects.all().delete()
+OffenseType.objects.all().delete()
+OffenseCategory.objects.all().delete()
 Neighbourhood.objects.all().delete()
 
 for item in offense_type:
-    row = Offense_type.objects.create(offense_type_short = item[0],
+    row = OffenseType.objects.create(offense_type_short = item[0],
                                     offense_type_name = item[1])
     row.save()
     offense_type_rows[item[0]] = row
 
 for item in offense_category:
-    row = Offense_category.objects.create(offense_category_short = item[0],
+    row = OffenseCategory.objects.create(offense_category_short = item[0],
                                     offense_category_name = item[1])
     row.save()
     offense_category_rows[item[0]] = row
 
 for neighbourhood in neighbourhoods:
-    row = Neighbourhood.objects.create(neighbourhood_id = neighbourhood)
+    row = Neighbourhood.objects.create(name = neighbourhood)
     row.save()
     neighbourhoods_rows[neighbourhood] = row
 
@@ -99,8 +99,8 @@ for location, dict_values in location.items():
         incident_address = dict_values['incident_address'],
         district_id = dict_values['district_id'],
         precinct_id = dict_values['precinct_id'],
-        geo_id = geolocation_rows[location],
-        neighbourhood_id = neighbourhoods_rows[dict_values['neighbourhood_id']]
+        geo = geolocation_rows[location],
+        neighbourhood = neighbourhoods_rows[dict_values['neighbourhood_id']]
     )
     row.save()
     location_rows[location] = row
@@ -112,6 +112,6 @@ for crime, dict_values in crime.items():
         is_crime = dict_values['is_crime'],
         is_traffic = dict_values['is_traffic'],
         victim_count = dict_values['victim_count'],
-        offense_type_id = offense_type_rows[dict_values['offense_type_id']],
-        offense_category_id = offense_category_rows[dict_values['offense_category_id']]
+        offense_type = offense_type_rows[dict_values['offense_type_id']],
+        offense_category = offense_category_rows[dict_values['offense_category_id']]
     )
