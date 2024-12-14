@@ -2,14 +2,14 @@ from django.db import models
 from django.utils import timezone # Django's time-zone utility
 
 class Offense_type(models.Model):
-    offense_type_id = models.CharField(max_length = 100, primary_key= False)
+    offense_type_short = models.CharField(max_length = 100, primary_key= False)
     offense_type_name = models.CharField(max_length = 200)
 
     def __str__(self):
         return self.offense_type_name
 
 class Offense_category(models.Model):
-    offense_category_id = models.CharField(max_length = 100, primary_key= False)
+    offense_category_short = models.CharField(max_length = 100, primary_key= False)
     offense_category_name = models.CharField(max_length =200)
 
     def __str__(self):

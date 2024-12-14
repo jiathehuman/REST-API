@@ -66,17 +66,14 @@ Offense_type.objects.all().delete()
 Offense_category.objects.all().delete()
 Neighbourhood.objects.all().delete()
 
-
-
-
 for item in offense_type:
-    row = Offense_type.objects.create(offense_type_id = item[0],
+    row = Offense_type.objects.create(offense_type_short = item[0],
                                     offense_type_name = item[1])
     row.save()
     offense_type_rows[item[0]] = row
 
 for item in offense_category:
-    row = Offense_category.objects.create(offense_category_id = item[0],
+    row = Offense_category.objects.create(offense_category_short = item[0],
                                     offense_category_name = item[1])
     row.save()
     offense_category_rows[item[0]] = row
