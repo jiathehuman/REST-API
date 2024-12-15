@@ -25,6 +25,72 @@ class OffenseTypeDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = OffenseType.objects.all()
     serializer_class = OffenseTypeSerializer
 
+class OffenseCategoryList(generics.ListCreateAPIView):
+    """
+    List all offense types, or create a new offense type
+    """
+    queryset = OffenseCategory.objects.all()
+    serializer_class = OffenseCategorySerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner = self.request.user)
+
+
+class OffenseCategoryDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete an offense type.
+    """
+    queryset = OffenseCategory.objects.all()
+    serializer_class = OffenseCategorySerializer
+###
+class NeighbourhoodList(generics.ListCreateAPIView):
+    """
+    List all offense types, or create a new offense type
+    """
+    queryset = Neighbourhood.objects.all()
+    serializer_class = NeighbourhoodSerializer
+
+
+class NeighbourhoodDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete an offense type.
+    """
+    queryset = Neighbourhood.objects.all()
+    serializer_class = NeighbourhoodSerializer
+###
+###
+class GeolocationList(generics.ListCreateAPIView):
+    """
+    List all offense types, or create a new offense type
+    """
+    queryset = Geolocation.objects.all()
+    serializer_class = GeolocationSerializer
+
+
+class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete an offense type.
+    """
+    queryset = Geolocation.objects.all()
+    serializer_class = GeolocationSerializer
+###
+###
+class LocationList(generics.ListCreateAPIView):
+    """
+    List all offense types, or create a new offense type
+    """
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+
+class LocationDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete an offense type.
+    """
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+###
+
 class CrimeList(generics.ListCreateAPIView):
     """
     Get list of crimes.
@@ -32,7 +98,14 @@ class CrimeList(generics.ListCreateAPIView):
     queryset = Crime.objects.all()[:10]
     serializer_class = CrimeSerializer
 
-class HighCollarCrimeList(mixins.ListModelMixin,
+class CrimeDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete an offense type.
+    """
+    queryset = Crime.objects.all()
+    serializer_class = CrimeSerializer
+
+class ProbationViolationList(mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   generics.GenericAPIView):
     """"
@@ -43,12 +116,13 @@ class HighCollarCrimeList(mixins.ListModelMixin,
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-class LocationList(generics.ListCreateAPIView):
+class VirginiaVillage_List(generics.ListCreateAPIView):
     """"
     List of high collar crimes.
     """
-    queryset = Location.objects.all()[:10]
-    # queryset = Location.objects.filter(neighbourhood__name__exact = 'virginia-village')
+    # queryset = Location.objects.all()[:10]
+    queryset = Location.objects.filter(neighbourhood__name__exact = 'virginia-village')
+    # queryset = Location.objects.all()
     serializer_class = LocationSerializer
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

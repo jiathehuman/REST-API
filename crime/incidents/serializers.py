@@ -25,7 +25,7 @@ class NeighbourhoodSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Neighbourhood
-        fields = ['id','neighbourhood_name']
+        fields = ['id','name']
         owner = serializers.ReadOnlyField(source = 'owner.username')
 
 class GeolocationSerializer(serializers.ModelSerializer):
