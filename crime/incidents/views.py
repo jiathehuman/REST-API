@@ -1,8 +1,9 @@
-from rest_framework import mixins
-from rest_framework import generics
+from rest_framework import mixins, generics, permissions
+from django.contrib.auth.models import User
 
 from .models import *
 from .serializers import *
+# from .permissions import ReadOnlyOrIsOwner
 
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
 
@@ -12,6 +13,9 @@ class OffenseTypeList(generics.ListCreateAPIView):
     """
     queryset = OffenseType.objects.all()
     serializer_class = OffenseTypeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner = self.request.user)
 
 
 class OffenseTypeDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -54,6 +58,17 @@ class LocationList(generics.ListCreateAPIView):
 
     def delete(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly, ReadOnlyOrIsOwner]
+
+
+# class UserDetail(generics.RetrieveAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly, ReadOnlyOrIsOwner]
 
 # class OffenseTypeList(mixins.ListModelMixin,
 #                   mixins.CreateModelMixin,
