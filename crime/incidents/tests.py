@@ -33,3 +33,7 @@ class OffenseTypeSerializerTest(APITestCase):
         # checking that all keys are present
         self.assertEqual(set(data.keys()),set(['id','offense_type_short','offense_type_name']))
 
+    def test_offenseTypeSerializerContainsRightData(self):
+        data = self.offenseTypeSerializer.data
+        self.assertEqual(data['offense_type_short'],'theft-of-intellectual-property')
+
