@@ -112,6 +112,7 @@ for crime, dict_values in crime.items():
         is_crime = dict_values['is_crime'],
         is_traffic = dict_values['is_traffic'],
         victim_count = dict_values['victim_count'],
+        location = location_rows[crime],
         offense_type = offense_type_rows[dict_values['offense_type_id']],
         offense_category = offense_category_rows[dict_values['offense_category_id']]
     )

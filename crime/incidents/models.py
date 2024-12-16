@@ -58,5 +58,6 @@ class Crime(models.Model):
     is_crime = models.BooleanField() # whether it is a crime
     is_traffic = models.BooleanField() # whether it is related to traffic
     victim_count = models.IntegerField(default = 0) # how many were harmed
+    location = models.ForeignKey(Location, on_delete = models.DO_NOTHING) # Foreign key to Offense_category
     offense_type = models.ForeignKey(OffenseType, on_delete = models.DO_NOTHING) # Foreign key to Offense_type
     offense_category = models.ForeignKey(OffenseCategory, on_delete = models.DO_NOTHING) # Foreign key to Offense_category

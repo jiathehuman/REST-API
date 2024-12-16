@@ -1,5 +1,7 @@
 from rest_framework import mixins, generics, permissions
 from django.contrib.auth.models import User
+from django.db.models import Count, F, Value, Case, When, IntegerField, Q
+from datetime import date
 
 from .models import *
 from .serializers import *
@@ -120,9 +122,7 @@ class VirginiaVillage_List(generics.ListCreateAPIView):
     """"
     List of high collar crimes.
     """
-    # queryset = Location.objects.all()[:10]
     queryset = Location.objects.filter(neighbourhood__name__exact = 'virginia-village')
-    # queryset = Location.objects.all()
     serializer_class = LocationSerializer
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -132,6 +132,53 @@ class VirginiaVillage_List(generics.ListCreateAPIView):
 
     def delete(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+
+
+# class CrimeDisprecancy(generics.RetrieveUpdateDestroyAPIView):
+#     # crimes_with_victims = Crime.objects.filter(victim_count__gt=0)
+#     # total_crimes = Crime.objects.all().count()
+#     # total_victims = crimes_with_victims.aggregate(victims=models.Sum('victim_count'))['victims']
+#     # discrepancy = total_victims - total_crimes
+
+#     locations_with_multiple_crimes = Location.objects.annotate(crime__count=models.Count('crime')) \
+#                                                .filter(crime__count__gt=1)
+#     correlated_crimes = Crime.objects.filter(location__in=locations_with_multiple_crimes) \
+#                                     .select_related('offense_type') \
+#                                     .distinct('offense_type')
+
+#     queryset = correlated_crimes
+
+
+
+# reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
+class HotSpots(generics.ListCreateAPIView):
+    """
+    List the hot spots for burglary in the year 2023
+    """
+    # get the OffenseType object where short name matches 'criminal-trespassing'
+    crime_type = OffenseCategory.objects.get(offense_category_short = "burglary")
+
+    # get results within the year of 2023
+    start_date = date(2023,1,1)
+    end_date = date(2024,1,1)
+
+    # filter Crime by crime_type and by dates specified aboe
+    crimes = Crime.objects.filter(offense_category = crime_type, first_occurrence_date__range = (start_date, end_date))
+
+    locations = crimes.values('location')
+
+    loc = Location.objects.filter(id__in=locations)
+
+    neighbourhood = loc.values('neighbourhood')
+
+    neighbourhood_hot = neighbourhood.values('neighbourhood').annotate(count = Count('neighbourhood')).order_by('-count')
+    ids = [item['neighbourhood'] for item in neighbourhood_hot]
+
+    hot_neighbourhoods = Neighbourhood.objects.filter(id__in=ids)
+    queryset = hot_neighbourhoods
+    serializer_class = NeighbourhoodSerializer
+
 
 # class UserList(generics.ListAPIView):
 #     queryset = User.objects.all()

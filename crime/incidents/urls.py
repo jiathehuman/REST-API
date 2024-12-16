@@ -20,4 +20,6 @@ urlpatterns = [
     path('crime/<int:pk>',views.CrimeDetail.as_view()),
     path('location/virginia_village',views.VirginiaVillage_List.as_view()),
     path('crime/probation-list',views.ProbationViolationList.as_view()),
+    path('api1',views.HotSpots.as_view()),
+    # path('api2',views.crime_disprecancy),
 ]
