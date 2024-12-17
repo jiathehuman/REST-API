@@ -2,12 +2,81 @@ from rest_framework import mixins, generics, permissions
 from django.contrib.auth.models import User
 from django.db.models import Count, F, Value, Case, When, IntegerField, Q
 from datetime import date
+from django.db.models import Avg
 
 from .models import *
 from .serializers import *
 # from .permissions import ReadOnlyOrIsOwner
 
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
+# Reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
+
+class HotSpotsBurglary(generics.ListCreateAPIView):
+    """
+    List the hot neighbourhoods for burglary in the year 2023
+    """
+    # get the OffenseType object where short name matches 'burglary'
+    crime_type = OffenseCategory.objects.get(offense_category_short = "burglary")
+
+    # get results within the year of 2023
+    start_date = date(2023,1,1)
+    end_date = date(2024,1,1)
+
+    # filter Crime by crime_type and by dates specified above
+    crimes = Crime.objects.filter(offense_category = crime_type,
+                                  first_occurrence_date__range = (start_date, end_date))
+
+    # get the locations of these crimes
+    locations = crimes.values('location')
+
+    # filter Location and return only the locations where burglary took place
+    locations_burglary = Location.objects.filter(id__in=locations)
+
+    # get a queryset of the corresponding neighbourhoods
+    neighbourhoods = locations_burglary.values('neighbourhood')
+
+    # aggregate the neighbourhood by count and order by descending
+    neighbourhood_aggregated = neighbourhoods.annotate(count = Count('neighbourhood')).order_by('-count')[0:10]
+
+    # get the neighbourhood ids for the aggregated data - these ids are used in the next line of code
+    # ids = [item['neighbourhood'] for item in neighbourhood_aggregated]
+
+    # filter Neighbourhood and return the top 10 neighbourhoods with the ids
+    # hotspots_burglary = Neighbourhood.objects.filter(id__in = neighbourhood_aggregated.values('id'))
+    hotspots_burglary = Neighbourhood.objects.filter(id__in = neighbourhood_aggregated.values('neighbourhood'))
+    # return the neighbourhoods - the final list of neighbourhoods that see the most burglary
+    queryset =  hotspots_burglary
+    serializer_class = NeighbourhoodSerializer
+
+
+
+
+class MotorTheftLeadTime(generics.ListCreateAPIView):
+    motor_theft = OffenseType.objects.get(offense_type_short = "theft-of-motor-vehicle")
+    motor_crimes = Crime.objects.filter(offense_type = motor_theft)
+
+    lead_time = motor_crimes.annotate(difference = (F("reported_date") -
+                                      F("first_occurrence_date"))).order_by('-difference')
+
+    avg = lead_time.aggregate(average = Avg("difference"))
+
+    fast_response = lead_time.filter(difference__lte = avg['average'])
+
+    fast_lead_time = motor_crimes.filter(id__in=fast_response.values('id'))
+
+    locations = Location.objects.filter(id__in=fast_lead_time.values('location'))[0:10]
+
+    queryset = locations
+    serializer_class = LocationSerializer
+
+
+# class MostFrequentCrimes(generics.ListCreateAPIView):
+#     """
+#     List
+#     """
+#     crime_counts = Crime.objects.values('offense_type__offense_type_name').annotate(count=Count('id')).order_by('-count')[:10]
+
+
 
 class OffenseTypeList(generics.ListCreateAPIView):
     """
@@ -151,33 +220,7 @@ class VirginiaVillage_List(generics.ListCreateAPIView):
 
 
 
-# reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
-class HotSpots(generics.ListCreateAPIView):
-    """
-    List the hot spots for burglary in the year 2023
-    """
-    # get the OffenseType object where short name matches 'criminal-trespassing'
-    crime_type = OffenseCategory.objects.get(offense_category_short = "burglary")
 
-    # get results within the year of 2023
-    start_date = date(2023,1,1)
-    end_date = date(2024,1,1)
-
-    # filter Crime by crime_type and by dates specified aboe
-    crimes = Crime.objects.filter(offense_category = crime_type, first_occurrence_date__range = (start_date, end_date))
-
-    locations = crimes.values('location')
-
-    loc = Location.objects.filter(id__in=locations)
-
-    neighbourhood = loc.values('neighbourhood')
-
-    neighbourhood_hot = neighbourhood.values('neighbourhood').annotate(count = Count('neighbourhood')).order_by('-count')
-    ids = [item['neighbourhood'] for item in neighbourhood_hot]
-
-    hot_neighbourhoods = Neighbourhood.objects.filter(id__in=ids)
-    queryset = hot_neighbourhoods
-    serializer_class = NeighbourhoodSerializer
 
 
 # class UserList(generics.ListAPIView):
