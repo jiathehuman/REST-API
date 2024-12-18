@@ -26,7 +26,6 @@ class NeighbourhoodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Neighbourhood
         fields = ['id','name']
-        owner = serializers.ReadOnlyField(source = 'owner.username')
 
 class GeolocationSerializer(serializers.ModelSerializer):
     """
@@ -34,33 +33,38 @@ class GeolocationSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Geolocation
-        fields = ['id','geo_x','geo_y','geo_lon','geo_lat']
+        fields = '__all__'
 
 class LocationSerializer(serializers.ModelSerializer):
     """
     Serializer for Location
     """
+    geo = GeolocationSerializer()
+
     class Meta:
         model = Location
         fields = ['id','incident_address','district_id','precinct_id','geo','neighbourhood']
-
 
     def create(self, validated_data):
         """
         Create and return a `Location` instance, given a validated data
         """
-        geo_data = self.initial_data['geo_id']
-        neighbourhood_data = self.initial_data['neighbourhood']
+        geo_data = validated_data.pop('geo')
 
-        new_location = Location(**{
-            **validated_data,
-            'geo_id' : Geolocation.objects.get(pk = geo_data['id']),
-            'neighbourhood' : Neighbourhood.objects.get(pk = neighbourhood_data['id'])
-        })
+        geo_serializer = GeolocationSerializer(data = geo_data)
+        geo_serializer.is_valid()
+        geo_instance = geo_serializer.save()
 
-        new_location.save()
 
-        return new_location
+        location = Location.objects.create(
+            incident_address = validated_data['incident_address'],
+            district_id = validated_data['district_id'],
+            precinct_id = validated_data['precinct_id'],
+            neighbourhood = Neighbourhood.objects.get(name=validated_data['neighbourhood']),
+            geo = geo_instance,
+        )
+
+        return location
 
 class CrimeSerializer(serializers.ModelSerializer):
     """
@@ -68,30 +72,79 @@ class CrimeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Crime
-        fields = ['id','first_occurrence_date','reported_date','is_crime','is_traffic',
+        # exclude = ('location',)
+        fields = ['id','first_occurrence_date','reported_date','is_crime','is_traffic','location',
                   'victim_count','offense_type','offense_category']
+
+        offense_type = OffenseTypeSerializer()
+        offense_category = OffenseCategorySerializer()
+        location = LocationSerializer()
 
     def create(self, validated_data):
         """
         Create and return a `Location` instance, given a validated data
         """
-        offense_type_data = self.initial_data['offense_type']
-        offense_category_data = self.initial_data['offense_category']
+        offense_type_data = validated_data.pop('offense_type')
+        offense_category_data = validated_data.pop('offense_category')
+        location_data = self.validated_data.pop('location')
+        # neighbourhood_data = location_data.pop('neighbourhood')
+        # geo_data = location_data.pop('geo')
+
+        # crime = Crime.objects.create(**validated_data)
+        # crime.is_valid(raise_exception = True)
+        # crime.save()
+
+        location = Location.objects.create(**location_data)
+        location.is_valid(raise_exception = True)
+        location.save()
 
         new_crime = Crime(**{
             **validated_data,
-            'offense_type' : Crime.objects.get(pk = offense_type_data['id']),
-            'offense_category': Crime.objects.get(pk = offense_category_data['id'])
+            'offense_type' : OffenseType.objects.get(pk = offense_type_data),
+            'offense_category': OffenseCategory.objects.get(pk = offense_category_data),
+            'location': Location.objects.get(pk = location.data['id'])
         })
-
-        new_crime.save()
 
         return new_crime
 
-class UserSerializer(serializers.ModelSerializer):
-    crimes = serializers.PrimaryKeyRelatedField(many = True, queryset = Crime.objects.all())
 
-    class Meta:
-        model = User
-        fields = ['id','username','snippets']
+
+
+        # location = Location.objects(**location_data)
+
+        # offense_type_data = self.initial_data['offense_type']
+        # offense_category_data = self.initial_data['offense_category']
+        # location_data = self.initial_data['location']
+        # geo_data = location_data['geo']
+
+        # new_geo = GeolocationSerializer(data = geo_data)
+        # new_geo.is_valid(raise_exception= True)
+        # new_geo.save()
+
+        # location_data['neighbourhood'] = Neighbourhood.objects.get(name__exact = location_data['neighbourhood']).id
+        # location_data['geo'] = new_geo.data['id']
+
+        # new_location = LocationSerializer(data = location_data)
+        # new_location.is_valid(raise_exception=True)
+        # new_location.save()
+
+        # print(new_location)
+
+        # new_crime = Crime(**{
+        #     **validated_data,
+        #     'offense_type' : OffenseType.objects.get(pk = offense_type_data),
+        #     'offense_category': OffenseCategory.objects.get(pk = offense_category_data),
+        #     'location': Location.objects.get(pk = new_location.data['id'])
+        # })
+
+        # new_crime.save()
+
+        # return new_crime
+
+# class UserSerializer(serializers.ModelSerializer):
+#     crimes = serializers.PrimaryKeyRelatedField(many = True, queryset = Crime.objects.all())
+
+#     class Meta:
+#         model = User
+#         fields = ['id','username','snippets']
 

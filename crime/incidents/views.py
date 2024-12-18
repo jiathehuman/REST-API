@@ -2,7 +2,14 @@ from rest_framework import mixins, generics, permissions
 from django.contrib.auth.models import User
 from django.db.models import Count, F, Value, Case, When, IntegerField, Q
 from datetime import date
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from django.db.models import Avg
+from django.db.models.functions import Sqrt
+import math
+from django.db import transaction
 
 from .models import *
 from .serializers import *
@@ -11,11 +18,28 @@ from .serializers import *
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
 # Reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
 
-class HotSpotsBurglary(generics.ListCreateAPIView):
+@api_view(['Get','POST'])
+def NewCrime(request):
+    """"
+    List of crimes with the option to POST (create a new crime). Validations is done through serializers
     """
-    List the hot neighbourhoods for burglary in the year 2023
+    if request.method == 'GET':
+        crimes = Crime.objects.filter().order_by('-first_occurrence_date')[0:5]
+        serializer = CrimeSerializer(crimes, many = True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = CrimeSerializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BurglaryHotSpots(generics.ListCreateAPIView):
     """
-    # get the OffenseType object where short name matches 'burglary'
+    List the neighbourhoods that see the most burglary in the year 2023
+    """
+    # get the OffenseCategory object where short name matches 'burglary'
     crime_type = OffenseCategory.objects.get(offense_category_short = "burglary")
 
     # get results within the year of 2023
@@ -38,43 +62,136 @@ class HotSpotsBurglary(generics.ListCreateAPIView):
     # aggregate the neighbourhood by count and order by descending
     neighbourhood_aggregated = neighbourhoods.annotate(count = Count('neighbourhood')).order_by('-count')[0:10]
 
-    # get the neighbourhood ids for the aggregated data - these ids are used in the next line of code
-    # ids = [item['neighbourhood'] for item in neighbourhood_aggregated]
-
     # filter Neighbourhood and return the top 10 neighbourhoods with the ids
-    # hotspots_burglary = Neighbourhood.objects.filter(id__in = neighbourhood_aggregated.values('id'))
     hotspots_burglary = Neighbourhood.objects.filter(id__in = neighbourhood_aggregated.values('neighbourhood'))
     # return the neighbourhoods - the final list of neighbourhoods that see the most burglary
     queryset =  hotspots_burglary
     serializer_class = NeighbourhoodSerializer
 
 
-
-
-class MotorTheftLeadTime(generics.ListCreateAPIView):
+class MotorTheftFastestResponse(generics.ListCreateAPIView):
+    """
+    List the locations that see the fastest response when a motor vehicle is stolen
+    """
+    # get the OffenseType object where short name matches 'theft-of-motor-vehicle'
     motor_theft = OffenseType.objects.get(offense_type_short = "theft-of-motor-vehicle")
+
+    # get the crimes that involves theft of a motor vehicle
     motor_crimes = Crime.objects.filter(offense_type = motor_theft)
 
+    # get the time difference between the reported time and the time of occurence of the incident
     lead_time = motor_crimes.annotate(difference = (F("reported_date") -
                                       F("first_occurrence_date"))).order_by('-difference')
 
+    # calculate the average lead time between incident and response
     avg = lead_time.aggregate(average = Avg("difference"))
 
+    # get the Crime objects where lead time is below average (fast)
     fast_response = lead_time.filter(difference__lte = avg['average'])
 
-    fast_lead_time = motor_crimes.filter(id__in=fast_response.values('id'))
-
-    locations = Location.objects.filter(id__in=fast_lead_time.values('location'))[0:10]
+    # get the corresponding Location objects
+    locations = Location.objects.filter(id__in=fast_response.values('location'))[0:10]
 
     queryset = locations
     serializer_class = LocationSerializer
 
+class WhiteCollarWeekend(generics.ListCreateAPIView):
+    """
+    List the type of White Collar offenses that are committed on the weekends
+    """
+    # get the OffenseCategory object where short name matches "white-collar-crime"
+    crime_type = OffenseCategory.objects.get(offense_category_short = "white-collar-crime")
 
-# class MostFrequentCrimes(generics.ListCreateAPIView):
-#     """
-#     List
-#     """
-#     crime_counts = Crime.objects.values('offense_type__offense_type_name').annotate(count=Count('id')).order_by('-count')[:10]
+    # check for all White Collar crimes
+    white_collar_crime = Crime.objects.filter(offense_category = crime_type)
+
+    # check for crimes that happened either on a Saturday (6) or a Sunday (7) using week_day method on the datetime object
+    weekend_crimes = white_collar_crime.filter(Q(first_occurrence_date__week_day=6) | Q(first_occurrence_date__week_day=7))
+
+    # get the OffenseType objects of these crimes that took place on the weekend
+    white_collar_offense_types = OffenseType.objects.filter(id__in=weekend_crimes.values('offense_type'))
+
+    queryset = white_collar_offense_types
+    serializer_class = OffenseTypeSerializer
+
+class NeighbourhoodsWithDrugAssault(generics.ListCreateAPIView):
+    """
+    List the neighbourhoods where either drugs and aggravated assault is prevelant
+    """
+    # get the OffenseType object where short name matches "drug-poss-paraphernalia"
+    crime_type_drugs = OffenseType.objects.get(offense_type_short = "drug-poss-paraphernalia")
+
+    # get the OffenseType object where short name matches "aggravated-assault"
+    crime_type_assault = OffenseType.objects.get(offense_type_short = "aggravated-assault")
+
+    # filter the Crime objects where possession of drugs is involved and get the corresponding neighbourhood
+    drug_in_location = Crime.objects.filter(offense_type = crime_type_drugs).values('location')
+
+    # filter the Crime objects where assault is involved and get the corresponding neighbourhood
+    assault_in_location = Crime.objects.filter(offense_type = crime_type_assault).values('location')
+
+    drug_in_neighbourhoods = Location.objects.filter(id__in=drug_in_location)
+    assault_in_neighbourhoods = Location.objects.filter(id__in=assault_in_location)
+
+    drug_assault_neighbourhoods = drug_in_neighbourhoods.union(assault_in_neighbourhoods)
+
+    # get the neighbourhoods where possession of drugs or aggravated assault occurred
+    queryset = Neighbourhood.objects.filter(id__in=drug_assault_neighbourhoods.values('neighbourhood'))
+    serializer_class = NeighbourhoodSerializer
+
+class GeolocationOfMurders(generics.ListCreateAPIView):
+    """List the 5 cloesest geolocation to the first murder that took place"""
+    def euclidean_dist(p1, p2):
+        return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+    # get the OffenseCategory object where short name matches "murder"
+    crime_type = OffenseCategory.objects.get(offense_category_short = "murder")
+
+    # get all the Crime objects that matches "murder" and order by when they occurred
+    murder_crimes = Crime.objects.filter(offense_category = crime_type).values('location').order_by('first_occurrence_date')
+
+    # get the earliest murder
+    first_murder =  murder_crimes[0]
+
+    # get the Geolocation object of the earliest murder from the Location object
+    first_murder_geolocation = Location.objects.get(id = first_murder['location']).geo
+
+    # get the coordinates in a tuple for computation later
+    first_murder_coords = (first_murder_geolocation.geo_lon,first_murder_geolocation.geo_lat)
+
+    # get all the murder locations
+    murder_locations = Location.objects.filter(id__in=murder_crimes)
+
+    # get all the murder geolocations
+    murder_geolocations = Geolocation.objects.filter(id__in=murder_locations)
+
+    # get the coordinates of all the murder geolocations
+    coordinates = murder_geolocations.values_list()
+
+    # get the reference point as the first murder's geolocation
+    reference_point = first_murder_coords
+
+    # a list to hold all the distances
+    distances = []
+
+    # for each coordinate, calculate the distance from the first murder's location
+    for coord in coordinates:
+        # use euclidean distance defined above
+        distance = euclidean_dist(reference_point, (coord[3], coord[4]))
+        if distance == 0: # if the reference point is itself
+            continue      # skip this iteration
+        distances.append((distance, coord)) # add these coordinates to the list
+
+    # sort the distances
+    distances.sort(key=lambda x: x[0])
+
+    # get the geo_id for the closest locations
+    closest_geocoordinates = [coord[1][0] for coord in distances[:5]]
+
+    closest_geolocations = Geolocation.objects.filter(id__in=closest_geocoordinates)
+
+    queryset = closest_geolocations
+    serializer_class = GeolocationSerializer
 
 
 
@@ -134,7 +251,7 @@ class GeolocationList(generics.ListCreateAPIView):
     """
     List all offense types, or create a new offense type
     """
-    queryset = Geolocation.objects.all()
+    queryset = Geolocation.objects.all()[0:10]
     serializer_class = GeolocationSerializer
 
 
@@ -150,7 +267,7 @@ class LocationList(generics.ListCreateAPIView):
     """
     List all offense types, or create a new offense type
     """
-    queryset = Location.objects.all()
+    queryset = Location.objects.all()[0:5]
     serializer_class = LocationSerializer
 
 
