@@ -20,7 +20,7 @@ urlpatterns = [
     # path('location/<int:pk>',views.LocationDetail.as_view()),
     path('geolocation/', views.GeolocationList.as_view()),
     # path('geolocation/<int:pk>/', views.GeolocationDetail.as_view()),
-    # path('crime/',views.CrimeList.as_view()),
+    path('crime/',views.CrimeList.as_view()),
     # path('crime/<int:pk>',views.CrimeDetail.as_view()),
     # path('location/virginia_village',views.VirginiaVillage_List.as_view()),
     # path('crime/probation-list',views.ProbationViolationList.as_view()),
