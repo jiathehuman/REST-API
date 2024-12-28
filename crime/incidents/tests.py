@@ -6,15 +6,24 @@ from .serializers import *
 
 # Create your tests here.
 class OffenseTypeSerializerTest(APITestCase):
+    """
+    Test to assess the function of the Offense Type Serializer
+    """
     offenseType = None
     offenseTypeSerializer = None
 
     # set up called before execution of test method
     def setUp(self):
+        """
+        Set up the variables for the test
+        """
         self.offenseType = OffenseTypeFactory.create()
         self.offenseTypeSerializer = OffenseTypeSerializer(instance = self.offenseType)
 
     def tearDown(self):
+        """
+        Remove the testing data upon finishing execution
+        """
         Crime.objects.all().delete()
         Location.objects.all().delete()
         Geolocation.objects.all().delete()
@@ -29,11 +38,17 @@ class OffenseTypeSerializerTest(APITestCase):
         NeighbourhoodFactory.reset_sequence(0)
 
     def test_offenseTypeSerializer(self):
+        """
+        Test that all the keys are present
+        """
         data = self.offenseTypeSerializer.data
         # checking that all keys are present
         self.assertEqual(set(data.keys()),set(['id','offense_type_short','offense_type_name']))
 
     def test_offenseTypeSerializerContainsRightData(self):
+        """
+        Test correctness of the data
+        """
         data = self.offenseTypeSerializer.data
         self.assertEqual(data['offense_type_short'],'theft-of-intellectual-property')
 

@@ -1,15 +1,17 @@
 from rest_framework import mixins, generics, permissions
 from django.contrib.auth.models import User
 from django.db.models import Count, F, Value, Case, When, IntegerField, Q
-from datetime import date
+from datetime import date, datetime
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from django.db.models import Avg
 from django.db.models.functions import Sqrt
+from django.shortcuts import render, redirect
 import math
 from django.db import transaction
+from .forms import *
 
 from .models import *
 from .serializers import *
@@ -18,22 +20,113 @@ from .serializers import *
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
 # Reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
 
-@api_view(['Get','POST'])
+def index(request):
+    """
+    Index page
+    """
+    return render(request, 'incidents/index.html')
+
+# @api_view(['GET','POST'])
 def NewCrime(request):
     """"
-    List of crimes with the option to POST (create a new crime). Validations is done through serializers
+    GET returns list of 5 most recent crimes.
+    POST creates a new crime. This creates and updates across all 6 tables.
+    Validations is done through serializers
     """
+
     if request.method == 'GET':
-        crimes = Crime.objects.filter().order_by('-first_occurrence_date')[0:5]
-        serializer = CrimeSerializer(crimes, many = True)
-        return Response(serializer.data)
+        context = {}
+        crime_form = CrimeForm()
+        location_form = LocationForm()
+        geolocation_form = GeolocationForm()
+        return render(request,'incidents/new_crime.html',{
+            'crime_form' : crime_form,
+            'location_form' : location_form,
+            'geolocation_form': geolocation_form
+        })
+        # crimes = Crime.objects.filter().order_by('-first_occurrence_date')[0:5]
+        # serializer = CrimeSerializer(crimes, many = True)
+        # return Response(serializer.data)
 
     elif request.method == 'POST':
-        serializer = CrimeSerializer(data = request.data)
+        crime_form = CrimeForm(request.POST)
+        location_form = CrimeForm(request.POST)
+        geolocation_form = Geolocation(request.POST)
+
+        data_dict = {}
+
+        for key, value in request.POST.items():
+            print(key,value)
+            data_dict[key] = value
+
+        print(data_dict)
+
+        first_occurrence_date = datetime(
+                    year=int(data_dict['first_occurrence_date_year']),
+                    month=int(data_dict['first_occurrence_date_month']),
+                    day=int(data_dict['first_occurrence_date_day'])
+                )
+        reported_date = datetime(
+                    year=int(data_dict['reported_date_year']),
+                    month=int(data_dict['reported_date_month']),
+                    day=int(data_dict['reported_date_day'])
+            )
+
+        data_dict["first_occurrence_date"] = first_occurrence_date
+        data_dict["reported_date"] = reported_date
+
+        # Django form Boolean field is weird
+        if 'is_crime' not in data_dict:
+            data_dict["is_crime"] = False
+        if 'is_traffic' not in data_dict:
+            data_dict["is_traffic"] = False
+        #         cleaned_data['is_crime'] = False
+
+        neighbourhood = Neighbourhood.objects.get(id = data_dict["neighbourhood"])
+
+        data = {
+        "first_occurrence_date": data_dict["first_occurrence_date"],
+        "reported_date": data_dict["reported_date"],
+        "is_crime": data_dict["is_crime"],
+        "is_traffic": data_dict["is_traffic"],
+        "location": {
+        "incident_address": data_dict["incident_address"],
+        "district_id": data_dict['district_id'],
+        "precinct_id": data_dict['precinct_id'],
+        "geo": {
+         "geo_x": data_dict["geo_x"],
+         "geo_y": data_dict["geo_y"],
+         "geo_lon": data_dict["geo_lon"],
+         "geo_lat": data_dict["geo_lat"],
+        },
+        "neighbourhood": {
+            "id": neighbourhood.id,
+            "name": neighbourhood.name
+        }
+        },
+        "victim_count": data_dict["victim_count"],
+        "offense_type": data_dict["offense_type"],
+        "offense_category": data_dict["offense_category"]
+        }
+        print(data)
+        serializer = CrimeSerializer(data = data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # return Response({'message': 'Crime created successfully'}, status=status.HTTP_201_CREATED)
+            print('Crime created successfully')
+            return redirect('/')
+        else:
+            # return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+            # print("error")
+            print(serializer.errors)
+            return redirect('/')
+
+        # print(request.POST)
+        # print(request.POST.getlist('checkbox_field_name'))
+        return redirect('/')
+        # if form.is_valid():
+
 
 class BurglaryHotSpots(generics.ListCreateAPIView):
     """
@@ -288,7 +381,7 @@ class CrimeList(generics.ListCreateAPIView):
 
 class CrimeDetail(generics.RetrieveUpdateDestroyAPIView):
     """
-    Retrieve, update or delete an offense type.
+    Get detail of a crime
     """
     queryset = Crime.objects.all()
     serializer_class = CrimeSerializer

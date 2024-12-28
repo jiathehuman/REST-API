@@ -1,0 +1,13 @@
+{%extends "./base.html"%}
+{% block content %}
+<div class="container-fluid">
+    <h1>New Crime</h1>
+    <form action="" method="post" class = "form">
+        {% csrf_token %}
+        {{crime_form.as_p}}
+        {{location_form.as_p}}
+        {{geolocation_form.as_p}}
+        <button type="button submit" class = "btn btn-dark">Submit</button>
+    </form>
+    {% endblock %}
+</div>
