@@ -1,6 +1,5 @@
-from rest_framework import mixins, generics, permissions
-from django.contrib.auth.models import User
-from django.db.models import Count, F, Value, Case, When, IntegerField, Q
+from rest_framework import mixins, generics
+from django.db.models import Count, F, Q
 from datetime import date, datetime
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,12 +9,11 @@ from django.db.models import Avg
 from django.db.models.functions import Sqrt
 from django.shortcuts import render, redirect
 import math
-from django.db import transaction
+from django.urls import reverse
 from .forms import *
-
 from .models import *
 from .serializers import *
-# from .permissions import ReadOnlyOrIsOwner
+
 
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
 # Reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
@@ -24,9 +22,36 @@ def index(request):
     """
     Index page
     """
-    return render(request, 'incidents/index.html')
+    if request.method == 'GET':
+        category_form = OffenseCategoryForm()
+        range_neighbourhood_values = range(75,158)
+        range_geolocation_values = range(10001,20000)
+        return render(request, 'incidents/index.html',{
+            'form': category_form,
+            'n_range': range_neighbourhood_values,
+            'g_range': range_geolocation_values
+        })
+    elif request.method == 'POST':
+        category_form = OffenseCategoryForm(request.POST)
 
-# @api_view(['GET','POST'])
+        if category_form.is_valid():
+            # Extract the offense category short from the form data
+            print("cleaned data",  category_form.cleaned_data)
+            offense_category = category_form.cleaned_data.get('offense_category')
+
+            print("Offense_category:", offense_category.id)
+
+            # Redirect to the HotSpots page with the offense_category_short as a query parameter
+            return redirect('api2', pk = offense_category.id)
+
+        else:
+            range_neighbourhood_values = range(75,146)
+            # If the form is invalid, render the form again with errors
+            return render(request, 'incidents/index.html', {'form': category_form,
+                                                            'range': range_neighbourhood_values,
+                                                            'g_range': range_geolocation_values})
+
+
 def NewCrime(request):
     """"
     GET returns list of 5 most recent crimes.
@@ -34,8 +59,8 @@ def NewCrime(request):
     Validations is done through serializers
     """
 
+    # If the method is GET,
     if request.method == 'GET':
-        context = {}
         crime_form = CrimeForm()
         location_form = LocationForm()
         geolocation_form = GeolocationForm()
@@ -44,127 +69,128 @@ def NewCrime(request):
             'location_form' : location_form,
             'geolocation_form': geolocation_form
         })
-        # crimes = Crime.objects.filter().order_by('-first_occurrence_date')[0:5]
-        # serializer = CrimeSerializer(crimes, many = True)
-        # return Response(serializer.data)
 
     elif request.method == 'POST':
         crime_form = CrimeForm(request.POST)
-        location_form = CrimeForm(request.POST)
-        geolocation_form = Geolocation(request.POST)
+        location_form = LocationForm(request.POST)
+        geolocation_form = GeolocationForm(request.POST)
 
         data_dict = {}
+        if crime_form.is_valid() and location_form.is_valid() and geolocation_form.is_valid():
+            for key, value in request.POST.items():
+                print(key,value)
+                data_dict[key] = value
 
-        for key, value in request.POST.items():
-            print(key,value)
-            data_dict[key] = value
+            # print(data_dict)
 
-        print(data_dict)
-
-        first_occurrence_date = datetime(
-                    year=int(data_dict['first_occurrence_date_year']),
-                    month=int(data_dict['first_occurrence_date_month']),
-                    day=int(data_dict['first_occurrence_date_day'])
+            first_occurrence_date = datetime(
+                        year=int(data_dict['first_occurrence_date_year']),
+                        month=int(data_dict['first_occurrence_date_month']),
+                        day=int(data_dict['first_occurrence_date_day'])
+                    )
+            reported_date = datetime(
+                        year=int(data_dict['reported_date_year']),
+                        month=int(data_dict['reported_date_month']),
+                        day=int(data_dict['reported_date_day'])
                 )
-        reported_date = datetime(
-                    year=int(data_dict['reported_date_year']),
-                    month=int(data_dict['reported_date_month']),
-                    day=int(data_dict['reported_date_day'])
-            )
 
-        data_dict["first_occurrence_date"] = first_occurrence_date
-        data_dict["reported_date"] = reported_date
+            data_dict["first_occurrence_date"] = first_occurrence_date
+            data_dict["reported_date"] = reported_date
 
-        # Django form Boolean field is weird
-        if 'is_crime' not in data_dict:
-            data_dict["is_crime"] = False
-        if 'is_traffic' not in data_dict:
-            data_dict["is_traffic"] = False
-        #         cleaned_data['is_crime'] = False
+            # Django form Boolean field is weird
+            if 'is_crime' not in data_dict:
+                data_dict["is_crime"] = False
+            if 'is_traffic' not in data_dict:
+                data_dict["is_traffic"] = False
+            #         cleaned_data['is_crime'] = False
 
-        neighbourhood = Neighbourhood.objects.get(id = data_dict["neighbourhood"])
+            neighbourhood = Neighbourhood.objects.get(id = data_dict["neighbourhood"])
 
-        data = {
-        "first_occurrence_date": data_dict["first_occurrence_date"],
-        "reported_date": data_dict["reported_date"],
-        "is_crime": data_dict["is_crime"],
-        "is_traffic": data_dict["is_traffic"],
-        "location": {
-        "incident_address": data_dict["incident_address"],
-        "district_id": data_dict['district_id'],
-        "precinct_id": data_dict['precinct_id'],
-        "geo": {
-         "geo_x": data_dict["geo_x"],
-         "geo_y": data_dict["geo_y"],
-         "geo_lon": data_dict["geo_lon"],
-         "geo_lat": data_dict["geo_lat"],
-        },
-        "neighbourhood": {
-            "id": neighbourhood.id,
-            "name": neighbourhood.name
-        }
-        },
-        "victim_count": data_dict["victim_count"],
-        "offense_type": data_dict["offense_type"],
-        "offense_category": data_dict["offense_category"]
-        }
-        print(data)
-        serializer = CrimeSerializer(data = data)
-        if serializer.is_valid():
-            serializer.save()
-            # return Response(serializer.data, status=status.HTTP_201_CREATED)
-            # return Response({'message': 'Crime created successfully'}, status=status.HTTP_201_CREATED)
-            print('Crime created successfully')
-            return redirect('/')
+            data = {
+            "first_occurrence_date": data_dict["first_occurrence_date"],
+            "reported_date": data_dict["reported_date"],
+            "is_crime": data_dict["is_crime"],
+            "is_traffic": data_dict["is_traffic"],
+            "location": {
+            "incident_address": data_dict["incident_address"],
+            "district_id": data_dict['district_id'],
+            "precinct_id": data_dict['precinct_id'],
+            "geo": {
+            "geo_x": data_dict["geo_x"],
+            "geo_y": data_dict["geo_y"],
+            "geo_lon": data_dict["geo_lon"],
+            "geo_lat": data_dict["geo_lat"],
+            },
+            "neighbourhood": {
+                "id": neighbourhood.id,
+                "name": neighbourhood.name
+            }
+            },
+            "victim_count": data_dict["victim_count"],
+            "offense_type": data_dict["offense_type"],
+            "offense_category": data_dict["offense_category"]
+            }
+            print(data)
+            serializer = CrimeSerializer(data = data)
+
+            if serializer.is_valid():
+                serializer.save()
+                print('Crime created successfully')
+                return redirect('/')
+            else:
+                print(serializer.errors)
+                return redirect('/api1')
+
         else:
-            # return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
-            # print("error")
-            print(serializer.errors)
-            return redirect('/')
+            return render(request, 'incidents/new_crime.html', {
+                'crime_form': crime_form,
+                'location_form': location_form,
+                'geolocation_form': geolocation_form,
+            })
 
-        # print(request.POST)
-        # print(request.POST.getlist('checkbox_field_name'))
-        return redirect('/')
-        # if form.is_valid():
-
-
-class BurglaryHotSpots(generics.ListCreateAPIView):
+class HotSpots(generics.ListCreateAPIView):
     """
-    List the neighbourhoods that see the most burglary in the year 2023
+    List the neighbourhoods that see the most specified crimes in a given year (2023).
+    Accepts an offense_category_short parameter to customize the crime type.
     """
-    # get the OffenseCategory object where short name matches 'burglary'
-    crime_type = OffenseCategory.objects.get(offense_category_short = "burglary")
-
-    # get results within the year of 2023
-    start_date = date(2023,1,1)
-    end_date = date(2024,1,1)
-
-    # filter Crime by crime_type and by dates specified above
-    crimes = Crime.objects.filter(offense_category = crime_type,
-                                  first_occurrence_date__range = (start_date, end_date))
-
-    # get the locations of these crimes
-    locations = crimes.values('location')
-
-    # filter Location and return only the locations where burglary took place
-    locations_burglary = Location.objects.filter(id__in=locations)
-
-    # get a queryset of the corresponding neighbourhoods
-    neighbourhoods = locations_burglary.values('neighbourhood')
-
-    # aggregate the neighbourhood by count and order by descending
-    neighbourhood_aggregated = neighbourhoods.annotate(count = Count('neighbourhood')).order_by('-count')[0:10]
-
-    # filter Neighbourhood and return the top 10 neighbourhoods with the ids
-    hotspots_burglary = Neighbourhood.objects.filter(id__in = neighbourhood_aggregated.values('neighbourhood'))
-    # return the neighbourhoods - the final list of neighbourhoods that see the most burglary
-    queryset =  hotspots_burglary
     serializer_class = NeighbourhoodSerializer
+    # queryset = Neighbourhood.objects.all()
+
+    def get_queryset(self):
+    # def get(self, request, *args, **kwargs):
+        id = self.kwargs.get('pk', 16) # default category has pk 16 (Aggravated Assault)
+
+        # get results within the year of 2023
+        start_date = date(2023,1,1)
+        end_date = date(2024,1,1)
+
+        # filter Crime by crime_type and by dates specified above
+        crimes = Crime.objects.filter(offense_category = id,
+                                    first_occurrence_date__range = (start_date, end_date))
+
+        # get the locations of these crimes
+        locations = crimes.values('location')
+
+
+        # filter Location and return only the locations where burglary took place
+        locations_hotspots = Location.objects.filter(id__in=locations)
+
+        # get a queryset of the corresponding neighbourhoods
+        neighbourhoods = locations_hotspots.values('neighbourhood')
+
+        # aggregate the neighbourhood by count and order by descending
+        neighbourhood_aggregated = neighbourhoods.annotate(count = Count('neighbourhood')).order_by('-count')[0:10]
+
+        # filter Neighbourhood and return the top 10 neighbourhoods with the ids
+        hotspots = Neighbourhood.objects.filter(id__in = neighbourhood_aggregated.values('neighbourhood'))
+
+        return hotspots
+
 
 
 class MotorTheftFastestResponse(generics.ListCreateAPIView):
     """
-    List the locations that see the fastest response when a motor vehicle is stolen
+    List the locations with the fastest response when a motor vehicle is stolen.
     """
     # get the OffenseType object where short name matches 'theft-of-motor-vehicle'
     motor_theft = OffenseType.objects.get(offense_type_short = "theft-of-motor-vehicle")
@@ -286,67 +312,27 @@ class GeolocationOfMurders(generics.ListCreateAPIView):
     queryset = closest_geolocations
     serializer_class = GeolocationSerializer
 
-
-
-class OffenseTypeList(generics.ListCreateAPIView):
-    """
-    List all offense types, or create a new offense type
-    """
-    queryset = OffenseType.objects.all()
-    serializer_class = OffenseTypeSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(owner = self.request.user)
-
-
-class OffenseTypeDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete an offense type.
-    """
-    queryset = OffenseType.objects.all()
-    serializer_class = OffenseTypeSerializer
-
-class OffenseCategoryList(generics.ListCreateAPIView):
-    """
-    List all offense types, or create a new offense type
-    """
-    queryset = OffenseCategory.objects.all()
-    serializer_class = OffenseCategorySerializer
-
-    def perform_create(self, serializer):
-        serializer.save(owner = self.request.user)
-
-
-class OffenseCategoryDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete an offense type.
-    """
-    queryset = OffenseCategory.objects.all()
-    serializer_class = OffenseCategorySerializer
-###
-class NeighbourhoodList(generics.ListCreateAPIView):
-    """
-    List all offense types, or create a new offense type
-    """
-    queryset = Neighbourhood.objects.all()
-    serializer_class = NeighbourhoodSerializer
-
-
 class NeighbourhoodDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete an offense type.
     """
     queryset = Neighbourhood.objects.all()
     serializer_class = NeighbourhoodSerializer
-###
-###
-class GeolocationList(generics.ListCreateAPIView):
-    """
-    List all offense types, or create a new offense type
-    """
-    queryset = Geolocation.objects.all()[0:10]
-    serializer_class = GeolocationSerializer
 
+class OffenseTypeList(mixins.ListModelMixin,
+                  mixins.CreateModelMixin,
+                  generics.GenericAPIView):
+    """
+    List the first five offense types, or create a new offense type
+    """
+    queryset = OffenseType.objects.all()[:5]
+    serializer_class = OffenseTypeSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
 class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -354,63 +340,126 @@ class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Geolocation.objects.all()
     serializer_class = GeolocationSerializer
+
+
+# class OffenseTypeList(generics.ListCreateAPIView):
+#     """
+#     List all offense types, or create a new offense type
+#     """
+#     queryset = OffenseType.objects.all()
+#     serializer_class = OffenseTypeSerializer
+
+#     def perform_create(self, serializer):
+#         serializer.save(owner = self.request.user)
+
+
+# class OffenseTypeDetail(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#     Retrieve, update or delete an offense type.
+#     """
+#     queryset = OffenseType.objects.all()
+#     serializer_class = OffenseTypeSerializer
+
+# class OffenseCategoryList(generics.ListCreateAPIView):
+#     """
+#     List all offense types, or create a new offense type
+#     """
+#     queryset = OffenseCategory.objects.all()
+#     serializer_class = OffenseCategorySerializer
+
+#     def perform_create(self, serializer):
+#         serializer.save(owner = self.request.user)
+
+
+# class OffenseCategoryDetail(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#     Retrieve, update or delete an offense type.
+#     """
+#     queryset = OffenseCategory.objects.all()
+#     serializer_class = OffenseCategorySerializer
+# ###
+# class NeighbourhoodList(generics.ListCreateAPIView):
+#     """
+#     List all offense types, or create a new offense type
+#     """
+#     queryset = Neighbourhood.objects.all()
+#     serializer_class = NeighbourhoodSerializer
+
+
+
 ###
 ###
-class LocationList(generics.ListCreateAPIView):
-    """
-    List all offense types, or create a new offense type
-    """
-    queryset = Location.objects.all()[0:5]
-    serializer_class = LocationSerializer
+# class GeolocationList(generics.ListCreateAPIView):
+#     """
+#     List all offense types, or create a new offense type
+#     """
+#     queryset = Geolocation.objects.all()[0:10]
+#     serializer_class = GeolocationSerializer
 
 
-class LocationDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete an offense type.
-    """
-    queryset = Location.objects.all()
-    serializer_class = LocationSerializer
-###
+# class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#     Retrieve, update or delete an offense type.
+#     """
+#     queryset = Geolocation.objects.all()
+#     serializer_class = GeolocationSerializer
+# ###
+# ###
+# class LocationList(generics.ListCreateAPIView):
+#     """
+#     List all offense types, or create a new offense type
+#     """
+#     queryset = Location.objects.all()[0:5]
+#     serializer_class = LocationSerializer
 
-class CrimeList(generics.ListCreateAPIView):
-    """
-    Get list of crimes.
-    """
-    queryset = Crime.objects.all()[:10]
-    serializer_class = CrimeSerializer
 
-class CrimeDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Get detail of a crime
-    """
-    queryset = Crime.objects.all()
-    serializer_class = CrimeSerializer
+# class LocationDetail(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#     Retrieve, update or delete an offense type.
+#     """
+#     queryset = Location.objects.all()
+#     serializer_class = LocationSerializer
+# ###
 
-class ProbationViolationList(mixins.ListModelMixin,
-                  mixins.CreateModelMixin,
-                  generics.GenericAPIView):
-    """"
-    List of high collar crimes.
-    """
-    queryset = Crime.objects.filter(offense_type__offense_type_short__exact = 'probation-violation')
-    serializer_class = CrimeSerializer
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+# class CrimeList(generics.ListCreateAPIView):
+#     """
+#     Get list of crimes.
+#     """
+#     queryset = Crime.objects.all()[:10]
+#     serializer_class = CrimeSerializer
 
-class VirginiaVillage_List(generics.ListCreateAPIView):
-    """"
-    List of high collar crimes.
-    """
-    queryset = Location.objects.filter(neighbourhood__name__exact = 'virginia-village')
-    serializer_class = LocationSerializer
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+# class CrimeDetail(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#     Get detail of a crime
+#     """
+#     queryset = Crime.objects.all()
+#     serializer_class = CrimeSerializer
 
-    def post(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+# class ProbationViolationList(mixins.ListModelMixin,
+#                   mixins.CreateModelMixin,
+#                   generics.GenericAPIView):
+#     """"
+#     List of high collar crimes.
+#     """
+#     queryset = Crime.objects.filter(offense_type__offense_type_short__exact = 'probation-violation')
+#     serializer_class = CrimeSerializer
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
 
-    def delete(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+# class VirginiaVillage_List(generics.ListCreateAPIView):
+#     """"
+#     List of high collar crimes.
+#     """
+#     queryset = Location.objects.filter(neighbourhood__name__exact = 'virginia-village')
+#     serializer_class = LocationSerializer
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+#     def post(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+#     def delete(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
 
 
 
