@@ -12,5 +12,5 @@ urlpatterns = [
     path('api6',views.GeolocationOfMurders.as_view(), name = 'api6'),
     path('neighbourhood/<int:pk>/',views.NeighbourhoodDetail.as_view(), name = 'neighbourhood'),
     path('offense-type/',views.OffenseTypeList.as_view(), name = 'offense_type'),
-    path('geolocation/<int:pk>/', views.GeolocationDetail.as_view(), name = 'geolocation')
+    path('geolocation/<int:pk>/', views.GeolocationDetail.as_view(), name = 'geolocation'),
 ]

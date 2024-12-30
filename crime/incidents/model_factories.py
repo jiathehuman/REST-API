@@ -30,12 +30,18 @@ class OffenseCategoryFactory(factory.django.DjangoModelFactory):
     offense_category_short = "theft" # eg. theft-from-motor-vehicle
     offense_category_name = "Theft and Stealing" # eg. Theft from Motor Vehicle
 
+    class Meta:
+        model = OffenseCategory
+
 
 class NeighbourhoodFactory(factory.django.DjangoModelFactory):
     """
     Factory for Neighbourhood model
     """
     name = "Derbyshire-Pemberly"
+
+    class Meta:
+        model = Neighbourhood
 
 class GeolocationFactory(factory.django.DjangoModelFactory):
     """
@@ -45,6 +51,9 @@ class GeolocationFactory(factory.django.DjangoModelFactory):
     geo_y = 4.132
     geo_lon = 53.338
     geo_lat =  -2.0547
+
+    class Meta:
+        model = Geolocation
 
 class LocationFactory(factory.django.DjangoModelFactory):
     """
@@ -56,6 +65,9 @@ class LocationFactory(factory.django.DjangoModelFactory):
     # geo factory and neighbourhood subfactory are used for the corresponding foreign key relationships
     geo = factory.SubFactory(GeolocationFactory)
     neighbourhood = factory.SubFactory(NeighbourhoodFactory)
+
+    class Meta:
+        model = Location
 
 class CrimeFactory(factory.django.DjangoModelFactory):
     """
@@ -70,3 +82,6 @@ class CrimeFactory(factory.django.DjangoModelFactory):
     # offense_type and offense_category subfactory are used for the corresponding foreign key relationships
     offense_type = factory.SubFactory(OffenseTypeFactory)
     offense_category = factory.SubFactory(OffenseCategoryFactory)
+
+    class meta:
+        model = Crime

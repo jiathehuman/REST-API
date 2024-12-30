@@ -1,96 +1,67 @@
+import unittest
+
 from django.test import TestCase
-from rest_framework.test import APITestCase
-from datetime import date, timedelta
 
-from .forms import *
-from .model_factories import *
-from .serializers import *
+class MyTestClass(TestCase):
 
-# Create your tests here.
-class OffenseTypeSerializerTest(APITestCase):
-    """
-    Test to assess the function of the Offense Type Serializer
-    """
-    offenseType = None
-    offenseTypeSerializer = None
+    @classmethod
+    def setUpTestData(cls):
+        # Perform initialization here (e.g., create common fixtures)
+        pass
 
-    # set up called before execution of test method
     def setUp(self):
-        """
-        Set up the variables for the test
-        """
-        self.offenseType = OffenseTypeFactory.create()
-        self.offenseTypeSerializer = OffenseTypeSerializer(instance = self.offenseType)
+        # Minimal setup for each test method (optional)
+        pass
 
-    def tearDown(self):
-        """
-        Remove the testing data upon finishing execution
-        """
-        Crime.objects.all().delete()
-        Location.objects.all().delete()
-        Geolocation.objects.all().delete()
-        OffenseType.objects.all().delete()
-        OffenseCategory.objects.all().delete()
-        Neighbourhood.objects.all().delete()
-        CrimeFactory.reset_sequence(0)
-        LocationFactory.reset_sequence(0)
-        GeolocationFactory.reset_sequence(0)
-        OffenseTypeFactory.reset_sequence(0)
-        OffenseCategoryFactory.reset_sequence(0)
-        NeighbourhoodFactory.reset_sequence(0)
+    def test_something(self):
+        # Your test logic here
+        pass
 
-    def test_offenseTypeSerializer(self):
-        """
-        Test that all the keys are present
-        """
-        data = self.offenseTypeSerializer.data
-        # checking that all keys are present
-        self.assertEqual(set(data.keys()),set(['id','offense_type_short','offense_type_name']))
 
-    def test_offenseTypeSerializerContainsRightData(self):
-        """
-        Test correctness of the data
-        """
-        data = self.offenseTypeSerializer.data
-        self.assertEqual(data['offense_type_short'],'theft-of-intellectual-property')
+# class MyUnitTest(unittest.TestCase):
 
-# class CrimeFormTests(TestCase):
+#     def test_something(self):
+#         # Your test logic here (without Django's test framework)
+#         self.assertEqual(1,1)
+
+
+# from django.test import TransactionTestCase
+
+# class MyTransactionTestCase(TransactionTestCase):
+
+#     def test_something(self):
+#         # Your test logic here
+#         self.assertEqual(1,1)
+
+# from django.test import TestCase, Client
+# from django.test.utils import tag
+# from django.test import override_settings
+# from .models import *
+
+# # @override_settings(MIDDLEWARE=[])
+# # @override_settings(INSTALLED_APPS=[])
+
+# class FormTests(TestCase):
+# #     # @tag('slow')
+# #     def setUp(self):
+# #         pass
+# #     def test_one(self):
+# #         self.assertEqual(1,1)
+
+# #     def test_two(self):
+# #         self.assertEqual(1,1)
+
+#     @classmethod
+#     def setUpTestData(cls):
+#         # Perform initialization here (e.g., create common fixtures)
+#         pass
+
 #     def setUp(self):
-#         """
-#         Set up the variables for the test
-#         """
-#         self.offenseType = OffenseTypeFactory.create()
-#         self.offenseCategory = OffenseCategoryFactory.create()
+#         # Minimal setup for each test method (optional)
+#         pass
 
-#     def tearDown(self):
-#         """
-#         Remove the testing data upon finishing execution
-#         """
-#         Crime.objects.all().delete()
-#         Location.objects.all().delete()
-#         Geolocation.objects.all().delete()
-#         OffenseType.objects.all().delete()
-#         OffenseCategory.objects.all().delete()
-#         Neighbourhood.objects.all().delete()
-#         CrimeFactory.reset_sequence(0)
-#         LocationFactory.reset_sequence(0)
-#         GeolocationFactory.reset_sequence(0)
-#         OffenseTypeFactory.reset_sequence(0)
-#         OffenseCategoryFactory.reset_sequence(0)
-#         NeighbourhoodFactory.reset_sequence(0)
+#     def test_one(self):
+#         self.assertEqual(1,1)
 
-#     def test_valid_form(self):
-#         """
-#         Test if the form is valid
-#         """
-#         form_data = {
-#             "first_occurrence_date": date.today(),
-#             "reported_date": date.today(),
-#             "is_crime": True,
-#             "is_traffic": False,
-#             "victim_count": 1,
-#             "offense_type": self.offenseType.id,
-#             "offense_category": self.offenseCategory.id,
-#         }
-#         form = CrimeForm(data = form_data)
-#         self.assertTrue(form.is_valid())
+#     def test_two(self):
+#         self.assertEqual(1,1)

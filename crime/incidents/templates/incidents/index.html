@@ -138,13 +138,13 @@
     .getElementById("neighbourhoodForm")
     .addEventListener("submit", function (event) {
       const selectedValue = document.getElementById("value_neighbourhood").value;
-      this.action = `neighbourhood/${selectedValue}`;
+      this.action = `neighbourhood/${selectedValue}/`;
     });
 
 document
     .getElementById("GeolocationForm")
     .addEventListener("submit", function (event) {
       const selectedValue = document.getElementById("value_geolocation").value;
-      this.action = `geolocation/${selectedValue}`;
+      this.action = `geolocation/${selectedValue}/`;
     });
 </script>
