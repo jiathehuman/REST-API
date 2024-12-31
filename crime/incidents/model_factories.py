@@ -76,8 +76,8 @@ class CrimeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Crime
     # use fuzzy naive date to get a dummy date
-    first_occurrence_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2023, 1, 1))
-    reported_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2023, 5, 1))
+    first_occurrence_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2023, 1, 1),datetime.datetime(2023, 2, 1))
+    reported_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2024, 2, 1),datetime.datetime(2024, 2, 1))
     is_crime = 1
     is_traffic = 1
     victim_count = 1

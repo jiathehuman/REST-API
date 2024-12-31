@@ -1,5 +1,3 @@
-import unittest
-
 from django.test import TestCase
 from incidents.model_factories import *
 from incidents.forms import *
@@ -21,8 +19,6 @@ class TestCrimeForm(TestCase):
             "offense_category": self.offense_category,
         }
         form = CrimeForm(data=form_data)
-        form.is_valid()
-        print(form.errors)
         self.assertTrue(form.is_valid())
 
     def test_invalid_date(self):
@@ -102,6 +98,52 @@ class TestGeolocationForm(TestCase):
 
         form = OffenseCategoryForm(data = form_data)
         self.assertFalse(form.is_valid())
+
+
+class TestLocationForm(TestCase):
+    def setUp(self):
+        self.geolocation = GeolocationFactory.create()
+        self.neighbourhood = NeighbourhoodFactory.create()
+        # self.location = LocationFactory.create()
+
+    def test_is_valid(self):
+        location = factory.build(dict,FACTORY_CLASS = LocationFactory)
+        form_data = {
+            "incident_address" : location["incident_address"],
+            "district_id" : location["district_id"],
+            "precinct_id" : location["precinct_id"],
+            "geo": self.geolocation,
+            "neighbourhood": self.neighbourhood
+        }
+        form = LocationForm(data=form_data)
+        form.is_valid()
+        print(form.errors)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_district(self):
+        location = factory.build(dict,FACTORY_CLASS = LocationFactory)
+        form_data = {
+            "incident_address" : location["incident_address"],
+            "district_id" : -1,
+            "precinct_id" : location["precinct_id"],
+            "geo": self.geolocation,
+            "neighbourhood": self.neighbourhood
+        }
+        form = LocationForm(data=form_data)
+        self.assertFalse(form.is_valid())
+
+    def test_invalid_precinct(self):
+        location = factory.build(dict,FACTORY_CLASS = LocationFactory)
+        form_data = {
+            "incident_address" : location["incident_address"],
+            "district_id" : location["district_id"],
+            "precinct_id" : -1,
+            "geo": self.geolocation,
+            "neighbourhood": self.neighbourhood
+        }
+        form = LocationForm(data=form_data)
+        self.assertFalse(form.is_valid())
+
 
 
 

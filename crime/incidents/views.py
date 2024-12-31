@@ -357,14 +357,14 @@ class OffenseTypeList(mixins.ListModelMixin,
     """
     List the first five offense types, or create a new offense type
     """
-    queryset = OffenseType.objects.all()[:5]
+    queryset = OffenseType.objects.all().order_by('-id')[:5]
     serializer_class = OffenseTypeSerializer
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        return self.create(request, *args, **kwargs)
 
 class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
     """
