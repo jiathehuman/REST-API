@@ -73,15 +73,17 @@ class CrimeFactory(factory.django.DjangoModelFactory):
     """
     Factory for Crime model that contains broad details of the incident
     """
+    class Meta:
+        model = Crime
     # use fuzzy naive date to get a dummy date
     first_occurrence_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2023, 1, 1))
-    reported_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2023, 1, 1))
+    reported_date = fuzzy.FuzzyNaiveDateTime(datetime.datetime(2023, 5, 1))
     is_crime = 1
     is_traffic = 1
     victim_count = 1
+    location = factory.SubFactory(LocationFactory)
     # offense_type and offense_category subfactory are used for the corresponding foreign key relationships
     offense_type = factory.SubFactory(OffenseTypeFactory)
     offense_category = factory.SubFactory(OffenseCategoryFactory)
 
-    class meta:
-        model = Crime
+

@@ -20,8 +20,10 @@ def index(request):
     # If the request method is GET, render the Form and initialise values.
     if request.method == 'GET':
         category_form = OffenseCategoryForm()
-        range_neighbourhood_values = range(75,158) # for neighbourhood detail view
-        range_geolocation_values = range(10001,20000) # for geolocation detail view
+        neighbourhood_ids = list(Neighbourhood.objects.all().values_list('id', flat=True))
+        geolocation_ids  = list(Geolocation.objects.all().values_list('id', flat=True))
+        range_neighbourhood_values = range(neighbourhood_ids[0],neighbourhood_ids[-1]) # for neighbourhood detail view
+        range_geolocation_values = range(geolocation_ids[0],geolocation_ids[-1]) # for geolocation detail view
         # render the index page with the form and the initialised values
         return render(request, 'incidents/index.html',{
             'form': category_form,

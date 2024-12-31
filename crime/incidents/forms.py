@@ -36,28 +36,17 @@ class CrimeForm(forms.Form):
 
         # get the fields that should not be negative
         victim_count = cleaned_data.get("victim_count")
-        district_id = cleaned_data.get("district_id")
-        precinct_id = cleaned_data.get("precinct_id")
 
         # dictionary for errors
         errors = {}
 
         # checking date
         if first_occurrence and reported_date and first_occurrence > reported_date:
-            print("Crime Form clean is called")
-            errors['first_occurrence_date'] = "First occurrence must be after reported date."
+            errors['first_occurrence_date'] = "First occurrence must be before reported date."
 
         # check that victim count is not negative, append the error to the errors dict
         if victim_count < 0:
             errors['victim_count'] = "Victim count cannot be a negative number."
-
-        # check that district_id is not negative, append the error to the errors dict
-        if district_id < 0:
-            errors['district_id'] = "Victim count cannot be a negative number."
-
-        # check that precinct_id is not negative, append the error to the errors dict
-        if precinct_id < 0:
-            errors['precinct_id'] = "Victim count cannot be a negative number."
 
         # if there are any errors, raise it with ValidationError
         if errors:
@@ -74,6 +63,26 @@ class LocationForm(forms.ModelForm):
         model = Location
         # only get the fields that we need
         fields = ['incident_address','district_id','precinct_id','neighbourhood']
+
+    def clean(self):
+        cleaned_data = super(LocationForm, self).clean()
+        district_id = cleaned_data.get("district_id")
+        precinct_id = cleaned_data.get("precinct_id")
+
+        errors = {}
+
+        # check that district_id is not negative, append the error to the errors dict
+        if district_id < 0:
+            errors['district_id'] = "Victim count cannot be a negative number."
+
+        # check that precinct_id is not negative, append the error to the errors dict
+        if precinct_id < 0:
+            errors['precinct_id'] = "Victim count cannot be a negative number."
+
+        if errors:
+            raise forms.ValidationError(errors)
+
+        return cleaned_data
 
 class GeolocationForm(forms.ModelForm):
     """
