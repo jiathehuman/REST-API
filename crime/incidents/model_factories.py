@@ -1,17 +1,11 @@
 import factory
-from random import randint
-from random import choice
-from django.test import TestCase
-from django.conf import Settings
-from django.core.files import File
 from factory import fuzzy
 import datetime
-
 from .models import *
 
-######
-# Classes in the model_factories.py file are PyTest fixtures that are dummy data created for unit tests
-# #####
+"""
+Classes in the model_factories.py file are PyTest fixtures that are dummy data created for unit tests
+"""
 
 class OffenseTypeFactory(factory.django.DjangoModelFactory):
     """
@@ -82,6 +76,7 @@ class CrimeFactory(factory.django.DjangoModelFactory):
     is_traffic = 1
     victim_count = 1
     location = factory.SubFactory(LocationFactory)
+
     # offense_type and offense_category subfactory are used for the corresponding foreign key relationships
     offense_type = factory.SubFactory(OffenseTypeFactory)
     offense_category = factory.SubFactory(OffenseCategoryFactory)

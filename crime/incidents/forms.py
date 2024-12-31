@@ -35,7 +35,7 @@ class CrimeForm(forms.Form):
         reported_date = cleaned_data.get("reported_date")
 
         # get the fields that should not be negative
-        victim_count = cleaned_data.get("victim_count")
+        victim_count = cleaned_data.get("victim_count",0)
 
         # dictionary for errors
         errors = {}
@@ -45,7 +45,7 @@ class CrimeForm(forms.Form):
             errors['first_occurrence_date'] = "First occurrence must be before reported date."
 
         # check that victim count is not negative, append the error to the errors dict
-        if victim_count < 0:
+        if victim_count  < 0:
             errors['victim_count'] = "Victim count cannot be a negative number."
 
         # if there are any errors, raise it with ValidationError
@@ -66,8 +66,10 @@ class LocationForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(LocationForm, self).clean()
-        district_id = cleaned_data.get("district_id")
-        precinct_id = cleaned_data.get("precinct_id")
+
+        # get the district_id and precinct_id
+        district_id = cleaned_data.get("district_id",0)
+        precinct_id = cleaned_data.get("precinct_id",0)
 
         errors = {}
 

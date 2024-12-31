@@ -4,10 +4,15 @@ from datetime import date, datetime
 from django.db.models import Avg
 from django.shortcuts import render, redirect, get_object_or_404
 import math
+from rest_framework.response import Response
+from django.http import JsonResponse
+from rest_framework import status
 
 from .forms import *
 from .models import *
 from .serializers import *
+from rest_framework.decorators import api_view, renderer_classes
+
 
 
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
@@ -36,7 +41,7 @@ def index(request):
 
         # Validate the form
         if category_form.is_valid():
-            # If the form is valid, extract the offense category short from the form data
+            # If the form is valid, extract the offense category short from the form dataå
             offense_category = category_form.cleaned_data.get('offense_category')
 
             # Redirect to the HotSpots page with the offense_category_short as a query parameter
@@ -49,6 +54,8 @@ def index(request):
                                                             'g_range': range_geolocation_values})
 
 
+# render as an API VIEW
+@api_view(['GET','POST'])
 def NewCrime(request):
     """"
     GET returns list of 5 most recent crimes.
@@ -72,6 +79,7 @@ def NewCrime(request):
 
     # If the method is POST, aka user submit the form:
     elif request.method == 'POST':
+        print(request.POST)
         crime_form = CrimeForm(request.POST)
         location_form = LocationForm(request.POST)
         geolocation_form = GeolocationForm(request.POST)
@@ -143,14 +151,14 @@ def NewCrime(request):
             # If the serializer is valid, save the object
             if serializer.is_valid():
                 serializer.save()
-                return redirect('/')
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 # Otherwise, print the serializers in console and redirect back to the form
-                print(serializer.errors)
-                return redirect('/api1')
-
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             # if the form is not valid, render it again with the errors:
+            # return Response(status=status.HTTP_400_BAD_REQUEST)
+            print("This is called")
             return render(request, 'incidents/new_crime.html', {
                 'crime_form': crime_form,
                 'location_form': location_form,
@@ -339,6 +347,7 @@ class GeolocationOfMurders(generics.ListCreateAPIView):
         # get the geo_id for the closest locations
         closest_geocoordinates = [coord[1][0] for coord in distances[:5]]
 
+        # get the nearest Geolocations
         closest_geolocations = Geolocation.objects.filter(id__in=closest_geocoordinates)
 
         return closest_geolocations
@@ -357,18 +366,18 @@ class OffenseTypeList(mixins.ListModelMixin,
     """
     List the first five offense types, or create a new offense type
     """
-    queryset = OffenseType.objects.all().order_by('-id')[:5]
+    queryset = OffenseType.objects.all().order_by('-id')[:5] # limit to five
     serializer_class = OffenseTypeSerializer
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs) # get the list defined by queryset
 
     def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        return self.create(request, *args, **kwargs) # create the Offense Type
 
 class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete an offense type.
     """
-    queryset = Geolocation.objects.all()
-    serializer_class = GeolocationSerializer
+    queryset = Geolocation.objects.all() # query Geolocation
+    serializer_class = GeolocationSerializer # use the Geolocation serializer
