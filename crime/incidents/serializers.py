@@ -50,8 +50,6 @@ class LocationSerializer(serializers.ModelSerializer):
         """
         Create and return a `Location` instance, given a validated data
         """
-        print("Location serializer create is called")
-        print(validated_data)
         # from the validated data, get all the geolocation data and remove it from the validated data with pop
         geo_data = validated_data.pop('geo')
 
@@ -72,9 +70,6 @@ class LocationSerializer(serializers.ModelSerializer):
             neighbourhood_instance = neighbourhood_serializer.save()
         else:
             raise serializers.ValidationError(f"Neighbourhood serializer is not valid in LocationSerializer: {neighbourhood_serializer.errors}")
-
-        # print("This is neighbourhood", neighbourhood)
-        print("This is neighbourhood data", (neighbourhood_data))
 
         # create the location object with the relevant data
         location = Location.objects.create(

@@ -10,7 +10,7 @@
     <div class="card-body text-dark">
       <h5 class="card-title">API Endpoint One</h5>
       <span class="span-post">POST</span><span class="span-link">http://127.0.0.1:8000/api1</span>
-      <p class="card-text">Log a new crime with POST.</p>
+      <p class="card-text">Log a new crime with POST with Django forms and nested serializers.</p>
       <a href="/api1" class="btn btn-dark">Click here</a>
     </div>
   </div>
@@ -46,7 +46,7 @@
     <div class="card-body text-dark">
       <h5 class="card-title">API Endpoint Four</h5>
       <span class="span-get">GET</span
-      ><span class="span-link">http://127.0.0.1:8000/api4</span>
+      ><span class="span-post">POST</span><span class="span-link">http://127.0.0.1:8000/api4</span>
       <p class="card-text">
         List the type of White Collar offenses that are committed on the
         weekends.
@@ -72,7 +72,7 @@
       <span class="span-get">GET</span
       ><span class="span-link">http://127.0.0.1:8000/api6</span>
       <p class="card-text">
-        List the 5 cloesest geolocation to the first murder that took place.
+        List the 5 closest geolocation to the first murder that took place.
       </p>
       <a href="/api6" class="btn btn-dark">Click here</a>
     </div>
@@ -127,6 +127,17 @@
           </form>
 
     </div>
+    <div class="card border-dark mb-3">
+      <div class="card-body text-dark">
+        <h5 class="card-title">Crime List View</h5>
+        <span class="span-get">GET</span>
+        <span class="span-post">POST</span>
+        <span class="span-link">http://127.0.0.1:8000/crime</span>
+        <p class="card-text">
+          Get a list of crime, or create a new crime record with REST framework. (Functionally similar to API1)
+        </p>
+        <a href="/crime" class="btn btn-dark">Click here</a>
+      </div>
   </div>
 </div>
 

@@ -57,7 +57,7 @@ def index(request):
 @api_view(['GET','POST'])
 def NewCrime(request):
     """"
-    GET returns list of 5 most recent crimes.
+    GET returns a HTML with the Django Forms.
     POST creates a new crime. This creates and updates across all 6 tables.
     Validations is done through serializers
     """
@@ -164,9 +164,9 @@ def NewCrime(request):
                 'geolocation_form': geolocation_form,
             })
 
-class HotSpots(generics.ListCreateAPIView):
+class HotSpots(generics.ListAPIView):
     """
-    List the neighbourhoods that see the most specified crimes in a given year (2023).
+    List the neighbourhoods that see the most crimes of a specific category in a given year (2023).
     Accepts an offense_category_short parameter to customize the crime type.
     """
     serializer_class = NeighbourhoodSerializer
@@ -202,7 +202,7 @@ class HotSpots(generics.ListCreateAPIView):
 
 
 
-class MotorTheftFastestResponse(generics.ListCreateAPIView):
+class MotorTheftFastestResponse(generics.ListAPIView):
     """
     List the locations with the fastest response when a motor vehicle is stolen.
     """
@@ -249,7 +249,7 @@ class WhiteCollarWeekend(generics.ListCreateAPIView):
         white_collar_crime = Crime.objects.filter(offense_category = crime_type)
 
         # check for crimes that happened either on a Saturday (6) or a Sunday (7) using week_day method on the datetime object
-        weekend_crimes = white_collar_crime.filter(Q(first_occurrence_date__week_day=6) | Q(first_occurrence_date__week_day=7))
+        weekend_crimes = white_collar_crime.filter(Q(first_occurrence_date__week_day=7) | Q(first_occurrence_date__week_day=1))
 
         # get the OffenseType objects of these crimes that took place on the weekend
         white_collar_offense_types = OffenseType.objects.filter(id__in=weekend_crimes.values('offense_type'))
@@ -258,7 +258,7 @@ class WhiteCollarWeekend(generics.ListCreateAPIView):
         # queryset = white_collar_offense_types
 
 
-class NeighbourhoodsWithDrugAssault(generics.ListCreateAPIView):
+class NeighbourhoodsWithDrugAssault(generics.ListAPIView):
     """
     List the neighbourhoods where either drugs and aggravated assault is prevelant
     """
@@ -385,5 +385,5 @@ class CrimeList(generics.ListCreateAPIView):
     """
     Get list of crimes.
     """
-    queryset = Crime.objects.all()[:10]
+    queryset = Crime.objects.all().order_by('-id')[:10]
     serializer_class = CrimeSerializer

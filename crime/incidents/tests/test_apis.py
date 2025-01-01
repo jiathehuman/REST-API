@@ -9,8 +9,26 @@ import json
 """
 Test file for API tests
 """
+class HotspotTest(APITestCase):
+    """
+    Test for the Hotspot endpoint.
+    """
+    def setUp(self):
+        """Set up test"""
+        # Create test data
+        self.offense_category = OffenseCategoryFactory.create(offense_category_name="Aggravated Assault")
+        self.url = reverse('api2', kwargs = {'pk': self.offense_category.id})
 
-class GeolocationTest(APITestCase):
+    def test_get_hotspots(self):
+        """
+        Tests if the HotSpots view returns the correct top neighbourhoods.
+        """
+        response = self.client.get(self.url, format='json')
+
+        # assert that response status code is 200 ok
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+class GeolocationDetailTest(APITestCase):
     """
     Test for the Geolocation endpoint
     """
@@ -105,7 +123,7 @@ class OffenseTypeListTest(APITestCase):
         self.assertEqual(response.data['offense_type_short'], new_offense_data['offense_type_short'])
         self.assertEqual(response.data['offense_type_name'], new_offense_data['offense_type_name'])
 
-class NeighbourhoodTest(APITestCase):
+class NeighbourhoodListTest(APITestCase):
     """
     Test for the Neighbourhood endpoint.
     """
@@ -138,21 +156,4 @@ class NeighbourhoodTest(APITestCase):
         self.assertEqual(response.status_code, 204) # 204 no content there, delete successful
 
 
-class HotspotTest(APITestCase):
-    """
-    Test for the Hotspot endpoint.
-    """
-    def setUp(self):
-        """Set up test"""
-        # Create test data
-        self.offense_category = OffenseCategoryFactory.create(offense_category_name="Aggravated Assault")
-        self.url = reverse('api2', kwargs = {'pk': self.offense_category.id})
 
-    def test_get_hotspots(self):
-        """
-        Tests if the HotSpots view returns the correct top neighbourhoods.
-        """
-        response = self.client.get(self.url, format='json')
-
-        # assert that response status code is 200 ok
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
