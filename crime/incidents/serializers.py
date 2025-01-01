@@ -57,15 +57,16 @@ class LocationSerializer(serializers.ModelSerializer):
 
         # serialize the geo data
         geo_serializer = GeolocationSerializer(data = geo_data)
-        geo_serializer.is_valid()
-        geo_instance = geo_serializer.save()
+        if geo_serializer.is_valid():
+            geo_instance = geo_serializer.save()
+        else:
+            raise serializers.ValidationError(f"Geolocation serializer is not valid in LocationSerializer: {neighbourhood_serializer.errors}")
 
         # from the validated data, get the neighbourhood data and remove it from the validated data with pop
         neighbourhood_data = validated_data.pop('neighbourhood')
 
         # either get the corresponding neighbourhood instance, or create one.
         # Most often, the neighbourhood will already exist in the database
-        # neighbourhood, created = Neighbourhood.objects.get_or_create(**neighbourhood_data)
         neighbourhood_serializer= NeighbourhoodSerializer(data = neighbourhood_data)
         if neighbourhood_serializer.is_valid():
             neighbourhood_instance = neighbourhood_serializer.save()
