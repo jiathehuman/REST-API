@@ -50,7 +50,8 @@ class LocationSerializer(serializers.ModelSerializer):
         """
         Create and return a `Location` instance, given a validated data
         """
-
+        print("Location serializer create is called")
+        print(validated_data)
         # from the validated data, get all the geolocation data and remove it from the validated data with pop
         geo_data = validated_data.pop('geo')
 
@@ -64,14 +65,22 @@ class LocationSerializer(serializers.ModelSerializer):
 
         # either get the corresponding neighbourhood instance, or create one.
         # Most often, the neighbourhood will already exist in the database
-        neighbourhood, created = Neighbourhood.objects.get_or_create(**neighbourhood_data)
+        # neighbourhood, created = Neighbourhood.objects.get_or_create(**neighbourhood_data)
+        neighbourhood_serializer= NeighbourhoodSerializer(data = neighbourhood_data)
+        if neighbourhood_serializer.is_valid():
+            neighbourhood_instance = neighbourhood_serializer.save()
+        else:
+            raise serializers.ValidationError(f"Neighbourhood serializer is not valid in LocationSerializer: {neighbourhood_serializer.errors}")
+
+        # print("This is neighbourhood", neighbourhood)
+        print("This is neighbourhood data", (neighbourhood_data))
 
         # create the location object with the relevant data
         location = Location.objects.create(
             incident_address = validated_data['incident_address'],
             district_id = validated_data['district_id'],
             precinct_id = validated_data['precinct_id'],
-            neighbourhood = neighbourhood, # with the Neighbourhood object instance
+            neighbourhood = neighbourhood_instance, # with the Neighbourhood object instance
             geo = geo_instance, # with the Geolocation object instance
         )
 
@@ -82,6 +91,7 @@ class CrimeSerializer(serializers.ModelSerializer):
     Serializer for Crime incident
     """
     location = LocationSerializer()
+    # neighbourhood = NeighbourhoodSerializer()
 
     class Meta:
         model = Crime # use the Crime model as defined in models.py
@@ -96,6 +106,8 @@ class CrimeSerializer(serializers.ModelSerializer):
         # from the validated data, get all the location data and remove it from the validated data with pop
         location_data = self.validated_data.pop('location')
 
+        # print(location_data)
+
         # serialize the location data
         location_serializer = LocationSerializer(data = location_data)
 
@@ -103,7 +115,7 @@ class CrimeSerializer(serializers.ModelSerializer):
         if location_serializer.is_valid():
             location_instance = location_serializer.save()
         else:
-            raise serializers.ValidationError(location_serializer.errors)
+            raise serializers.ValidationError(f"Location serializer is not valid in Crime: {location_serializer.errors}")
 
         # create the Crime object instance
         crime = Crime.objects.create(

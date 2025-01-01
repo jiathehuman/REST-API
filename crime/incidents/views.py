@@ -14,7 +14,6 @@ from .serializers import *
 from rest_framework.decorators import api_view, renderer_classes
 
 
-
 # Reference: https://www.django-rest-framework.org/tutorial/3-class-based-views/
 # Reference for aggregation: https://docs.djangoproject.com/en/5.1/topics/db/aggregation/
 
@@ -79,7 +78,6 @@ def NewCrime(request):
 
     # If the method is POST, aka user submit the form:
     elif request.method == 'POST':
-        print(request.POST)
         crime_form = CrimeForm(request.POST)
         location_form = LocationForm(request.POST)
         geolocation_form = GeolocationForm(request.POST)
@@ -116,6 +114,8 @@ def NewCrime(request):
             if 'is_traffic' not in data_dict:
                 data_dict["is_traffic"] = False
 
+            # print(data_dict['neighbourhood'])
+
             # Get the Neighbourhood object with corresponding id
             neighbourhood = Neighbourhood.objects.get(id = data_dict["neighbourhood"])
 
@@ -135,10 +135,9 @@ def NewCrime(request):
             "geo_lon": data_dict["geo_lon"],
             "geo_lat": data_dict["geo_lat"],
             },
-            "neighbourhood": {
-                "id": neighbourhood.id,
-                "name": neighbourhood.name
-            }
+            "neighbourhood":
+            {"id": neighbourhood.id,
+             "name":neighbourhood.name}
             },
             "victim_count": data_dict["victim_count"],
             "offense_type": data_dict["offense_type"],
@@ -381,3 +380,10 @@ class GeolocationDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Geolocation.objects.all() # query Geolocation
     serializer_class = GeolocationSerializer # use the Geolocation serializer
+
+class CrimeList(generics.ListCreateAPIView):
+    """
+    Get list of crimes.
+    """
+    queryset = Crime.objects.all()[:10]
+    serializer_class = CrimeSerializer

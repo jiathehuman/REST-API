@@ -13,4 +13,5 @@ urlpatterns = [
     path('neighbourhood/<int:pk>/',views.NeighbourhoodDetail.as_view(), name = 'neighbourhood'), # get the neighbourhood detail view
     path('offense-type/',views.OffenseTypeList.as_view(), name = 'offense_type'), # get the offese type as a list view
     path('geolocation/<int:pk>/', views.GeolocationDetail.as_view(), name = 'geolocation'), # get the geolocation detail view
+    path('crime/',views.CrimeList.as_view()), # crime list as view
 ]
