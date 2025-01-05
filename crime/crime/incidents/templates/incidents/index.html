@@ -1,0 +1,220 @@
+{% include "./base.html" %}
+
+<div class="container-fluid">
+  <div class="row p-3">
+    <h1>Crime</h1>
+    <p>
+      This project has been developed exclusively for academic purposes as part of the requirements for the mid-term coursework assignment in the CM3035 Advanced Web Development module at the University of London. The dataset utilized in this project is sourced from a publicly accessible collection on Kaggle. The data was originally contributed by the Data Analysis Unit of the Denver Police Department.
+    </p>
+
+    <p>
+      To see the structure of the API using Swagger, click on the link below: <br>
+      <a href="/swagger">Swagger</a>
+    </p>
+    <p>
+      To see the application on Elastic Beanstalk, click on the link below: <br>
+      <a href="http://crime-dev.ap-southeast-1.elasticbeanstalk.com/">Elastic Beanstalk (AWS)</a>
+    </p>
+
+  </div>
+
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">API Endpoint One</h5>
+      <span class="span-post">POST</span
+      ><span class="span-link">http://127.0.0.1:8000/api1</span>
+      <p class="card-text">
+        Log a new crime with POST with Django forms and nested serializers.
+      </p>
+      <a href="/api1" class="btn btn-dark">Click here</a>
+    </div>
+  </div>
+
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">API Endpoint Two</h5>
+      <span class="span-get">GET</span
+      ><span class="span-link">http://127.0.0.1:8000/api2/17</span>
+      <p class="card-text">
+        Get a hotspot for a particular category of offense.
+      </p>
+      <form action="" method="post" class="form">
+        {% csrf_token %} {{form.as_p}}
+        <button type="button submit" class="btn btn-dark">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">API Endpoint Three</h5>
+      <span class="span-get">GET</span
+      ><span class="span-link">http://127.0.0.1:8000/api3</span>
+      <p class="card-text">
+        List the locations with the fastest response when a motor vehicle is
+        stolen.
+      </p>
+      <a href="/api3" class="btn btn-dark">Click here</a>
+    </div>
+  </div>
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">API Endpoint Four</h5>
+      <span class="span-get">GET</span><span class="span-post">POST</span
+      ><span class="span-link">http://127.0.0.1:8000/api4</span>
+      <p class="card-text">
+        List the type of White Collar offenses that are committed on the
+        weekends.
+      </p>
+      <a href="/api4" class="btn btn-dark">Click here</a>
+    </div>
+  </div>
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">API Endpoint Five</h5>
+      <span class="span-get">GET</span
+      ><span class="span-link">http://127.0.0.1:8000/api5</span>
+      <p class="card-text">
+        List the neighbourhoods where either drugs and aggravated assault is
+        prevelant.
+      </p>
+      <a href="/api5" class="btn btn-dark">Click here</a>
+    </div>
+  </div>
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">API Endpoint Six</h5>
+      <span class="span-get">GET</span
+      ><span class="span-link">http://127.0.0.1:8000/api6</span>
+      <p class="card-text">
+        List the 5 closest geolocation to the first murder that took place.
+      </p>
+      <a href="/api6" class="btn btn-dark">Click here</a>
+    </div>
+  </div>
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">Neighbourhood Detail View</h5>
+      <span class="span-get">GET</span>
+      <span class="span-put">PUT</span>
+      <span class="span-delete">DELETE</span>
+      <span class="span-link">http://127.0.0.1:8000/neighbourhood/75</span>
+      <p class="card-text">
+        Get a specific neighbourhood so we can delete or update it.
+      </p>
+      <form id="neighbourhoodForm" method="GET" action="" class="form">
+        <label for="value_neighbourhood">Select the neighbourhood id:</label>
+        <select id="value_neighbourhood" name="value" class="mb-3">
+          {% for i in n_range%}
+          <option value="{{ i }}">{{ i }}</option>
+          {% endfor %}</select
+        ><br />
+        <button class="btn btn-dark" type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">Offense Type List View</h5>
+      <span class="span-get">GET</span><span class="span-post">POST</span
+      ><span class="span-link">http://127.0.0.1:8000/offense-type/</span>
+      <p class="card-text">
+        List the first five offense types, or create a new offense type.
+      </p>
+      <a href="/offense-type/" class="btn btn-dark">Click here</a>
+    </div>
+  </div>
+
+  <div class="card border-dark mb-3">
+    <div class="card-body text-dark">
+      <h5 class="card-title">Geolocation Detail View</h5>
+      <span class="span-get">GET</span>
+      <span class="span-put">PUT</span>
+      <span class="span-delete">DELETE</span>
+      <span class="span-link">http://127.0.0.1:8000/neighbourhood/75</span>
+      <p class="card-text">
+        Get a specific neighbourhood so we can delete or update it.
+      </p>
+      <form id="GeolocationForm" method="GET" action="" class="form">
+        <label for="value_geolocation">Select the Geolocation id:</label>
+        <select id="value_geolocation" name="value" class="mb-3">
+          {% for i in g_range%}
+          <option value="{{ i }}">{{ i }}</option>
+          {% endfor %}</select
+        ><br />
+        <button class="btn btn-dark" type="submit">Submit</button>
+      </form>
+    </div>
+    <div class="card border-dark mb-3">
+      <div class="card-body text-dark">
+        <h5 class="card-title">Crime List View</h5>
+        <span class="span-get">GET</span>
+        <span class="span-post">POST</span>
+        <span class="span-link">http://127.0.0.1:8000/crime</span>
+        <p class="card-text">
+          Get a list of crime, or create a new crime record with REST framework.
+          (Functionally similar to API1)
+        </p>
+        <a href="/crime" class="btn btn-dark">Click here</a>
+      </div>
+    </div>
+    <div class="card border-dark mb-3">
+      <div class="card-body text-dark">
+        <h5 class="card-title">Additional Details</h5>
+        <h6>I developed the application on VS Code with a Python virtual environment with Python version 3.12.7 and Django 4.2.17.
+          My device is running on MacOS 14.5 (23F79).</h6>
+        <p class="card-text">
+          <b>Admin site credentials:</b> <ul><li>admin@example.com</li><li>password123</li></ul>
+          <a href="/admin" class="btn btn-dark">Admin site</a> <br> <br>
+          <b>Packages</b> <br>
+          asgiref==3.8.1 <br>
+          attrs==24.3.0 <br>
+          beautifulsoup4==4.12.3 <br>
+          Django==4.2.17 <br>
+          django-bootstrap-v5==1.0.11 <br>
+          django-bootstrap5==24.3 <br>
+          djangorestframework==3.15.2 <br>
+          drf-spectacular==0.28.0 <br>
+          factory_boy==3.3.1 <br>
+          Faker==33.1.0 <br>
+          gunicorn==23.0.0 <br>
+          inflection==0.5.1 <br>
+          jsonschema==4.23.0 <br>
+          jsonschema-specifications==2024.10.1 <br>
+          packaging==24.2 <br>
+          python-dateutil==2.9.0.post0 <br>
+          PyYAML==6.0.2 <br>
+          referencing==0.35.1 <br>
+          rpds-py==0.22.3 <br>
+          six==1.17.0 <br>
+          soupsieve==2.6 <br>
+          sqlparse==0.5.3 <br>
+          typing_extensions==4.12.2 <br>
+          asgiref==3.8.1 <br>
+          uritemplate==4.1.1
+
+        </p>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Update the form action dynamically based on the selected value
+  document
+    .getElementById("neighbourhoodForm")
+    .addEventListener("submit", function (event) {
+      const selectedValue = document.getElementById(
+        "value_neighbourhood"
+      ).value;
+      this.action = `neighbourhood/${selectedValue}/`;
+    });
+
+  document
+    .getElementById("GeolocationForm")
+    .addEventListener("submit", function (event) {
+      const selectedValue = document.getElementById("value_geolocation").value;
+      this.action = `geolocation/${selectedValue}/`;
+    });
+</script>

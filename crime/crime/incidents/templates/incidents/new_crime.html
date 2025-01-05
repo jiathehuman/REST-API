@@ -1,0 +1,25 @@
+{%extends "./base.html"%} {% block content %}
+<div class="container-fluid">
+  <h1 class="pt-3">New Crime</h1>
+  <div class="div p-3">
+    <form action="" method="post" class="form">
+      {% csrf_token %}
+      {{form.victim_count.errors}}
+      {{crime_form.as_p}}
+      {{location_form.as_p}}
+      {{geolocation_form.as_p}}
+      <button type="button submit" class="btn btn-dark">Submit</button>
+    </form>
+  </div>
+  <style>
+    .errorlist {
+        padding: 10px;
+        border-radius: 5px;
+        width: 60%;
+        background-color: #FFF3CD;
+    }
+    </style>
+  {% endblock %}
+</div>
+
+
