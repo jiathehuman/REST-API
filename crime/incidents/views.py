@@ -7,6 +7,7 @@ import math
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 
 from .forms import *
 from .models import *
@@ -53,17 +54,17 @@ def index(request):
                                                             'g_range': range_geolocation_values})
 
 
-# render as an API VIEW
-@api_view(['GET','POST'])
-def NewCrime(request):
+class NewCrime(GenericAPIView):
     """"
     GET returns a HTML with the Django Forms.
     POST creates a new crime. This creates and updates across all 6 tables.
     Validations is done through serializers
     """
+    serializer_class = CrimeSerializer
+    queryset = Crime.objects.all()
 
     # If the method is GET,
-    if request.method == 'GET':
+    def get(self, request, *args, **kwargs):
         # instantiate the three Form objects
         crime_form = CrimeForm()
         location_form = LocationForm()
@@ -77,7 +78,7 @@ def NewCrime(request):
         })
 
     # If the method is POST, aka user submit the form:
-    elif request.method == 'POST':
+    def post(self, request, *args, **kwargs):
         crime_form = CrimeForm(request.POST)
         location_form = LocationForm(request.POST)
         geolocation_form = GeolocationForm(request.POST)
@@ -163,6 +164,116 @@ def NewCrime(request):
                 'location_form': location_form,
                 'geolocation_form': geolocation_form,
             })
+# render as an API VIEW
+# @api_view(['GET','POST'])
+# def NewCrime(request):
+#     """"
+#     GET returns a HTML with the Django Forms.
+#     POST creates a new crime. This creates and updates across all 6 tables.
+#     Validations is done through serializers
+#     """
+
+#     # If the method is GET,
+#     if request.method == 'GET':
+#         # instantiate the three Form objects
+#         crime_form = CrimeForm()
+#         location_form = LocationForm()
+#         geolocation_form = GeolocationForm()
+
+#         # render the page with the Forms
+#         return render(request,'incidents/new_crime.html',{
+#             'crime_form' : crime_form,
+#             'location_form' : location_form,
+#             'geolocation_form': geolocation_form
+#         })
+
+#     # If the method is POST, aka user submit the form:
+#     elif request.method == 'POST':
+#         crime_form = CrimeForm(request.POST)
+#         location_form = LocationForm(request.POST)
+#         geolocation_form = GeolocationForm(request.POST)
+
+#         data_dict = {} # initialise a dictionary to store the data from the form
+
+#         # validate the data in the form
+#         if crime_form.is_valid() and location_form.is_valid() and geolocation_form.is_valid():
+
+#             # for each key value pair inside the items in POST
+#             for key, value in request.POST.items():
+#                 data_dict[key] = value
+
+#             # transform the data for 'first occurrence' and 'reported date' into datetime objects
+#             first_occurrence_date = datetime(
+#                         year=int(data_dict['first_occurrence_date_year']),
+#                         month=int(data_dict['first_occurrence_date_month']),
+#                         day=int(data_dict['first_occurrence_date_day'])
+#                     )
+#             reported_date = datetime(
+#                         year=int(data_dict['reported_date_year']),
+#                         month=int(data_dict['reported_date_month']),
+#                         day=int(data_dict['reported_date_day'])
+#                 )
+
+#             # append the datetime objects into the data dictionary
+#             data_dict["first_occurrence_date"] = first_occurrence_date
+#             data_dict["reported_date"] = reported_date
+
+#             # Django Form Boolean field does not register a False value and remove the field instead.
+#             # Hence, if the Boolean fields is not in the dictionary, add it in.
+#             if 'is_crime' not in data_dict:
+#                 data_dict["is_crime"] = False
+#             if 'is_traffic' not in data_dict:
+#                 data_dict["is_traffic"] = False
+
+#             # print(data_dict['neighbourhood'])
+
+#             # Get the Neighbourhood object with corresponding id
+#             neighbourhood = Neighbourhood.objects.get(id = data_dict["neighbourhood"])
+
+#             # final data as a dictionary format to pass into our Serializer
+#             data = {
+#             "first_occurrence_date": data_dict["first_occurrence_date"],
+#             "reported_date": data_dict["reported_date"],
+#             "is_crime": data_dict["is_crime"],
+#             "is_traffic": data_dict["is_traffic"],
+#             "location": {
+#             "incident_address": data_dict["incident_address"],
+#             "district_id": data_dict['district_id'],
+#             "precinct_id": data_dict['precinct_id'],
+#             "geo": {
+#             "geo_x": data_dict["geo_x"],
+#             "geo_y": data_dict["geo_y"],
+#             "geo_lon": data_dict["geo_lon"],
+#             "geo_lat": data_dict["geo_lat"],
+#             },
+#             "neighbourhood":
+#             {"id": neighbourhood.id,
+#              "name":neighbourhood.name}
+#             },
+#             "victim_count": data_dict["victim_count"],
+#             "offense_type": data_dict["offense_type"],
+#             "offense_category": data_dict["offense_category"]
+#             }
+
+#             # Finalised data is passed into the nested CrimeSerializer
+#             serializer = CrimeSerializer(data = data)
+
+#             # If the serializer is valid, save the object
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+#             else:
+#                 # Otherwise, print the serializers in console and redirect back to the form
+#                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             # if the form is not valid, render it again with the errors:
+#             # return Response(status=status.HTTP_400_BAD_REQUEST)
+#             print("This is called")
+#             return render(request, 'incidents/new_crime.html', {
+#                 'crime_form': crime_form,
+#                 'location_form': location_form,
+#                 'geolocation_form': geolocation_form,
+#             })
 
 class HotSpots(generics.ListAPIView):
     """

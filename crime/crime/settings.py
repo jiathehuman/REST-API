@@ -37,6 +37,7 @@ ALLOWED_HOSTS = ['*'] # using Elastic Beanstalk
 INSTALLED_APPS = [
     "incidents.apps.IncidentsConfig",
     "rest_framework",
+    "drf_spectacular",
     "bootstrap5",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -129,3 +130,7 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS' : 'drf_spectacular.openapi.AutoSchema', # use openapi with drf_spectacular package
+}

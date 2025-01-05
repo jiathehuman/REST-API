@@ -4,7 +4,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
     path('', views.index, name = 'index'), # index page
-    path('api1',views.NewCrime, name = 'api1'), # POST a new crime
+    path('api1', views.NewCrime.as_view(), name = 'api1'),# POST a new crime
     path('api2/<int:pk>/',views.HotSpots.as_view(), name = 'api2'), # get all the Hot Spots where a certain type of crime happened
     path('api3',views.MotorTheftFastestResponse.as_view(), name = 'api3'), # get the neighbourhoods that sees the fastest response to motor theft
     path('api4', views.WhiteCollarWeekend.as_view(), name = 'api4'), # get the white collar crimes committed on weekends
