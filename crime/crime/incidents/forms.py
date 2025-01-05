@@ -1,10 +1,7 @@
 from django import forms
 from django.forms import ModelForm
-from django.forms import inlineformset_factory
 from .models import *
 
-from django import forms
-from django.forms import modelformset_factory
 from .models import Crime, Location
 from datetime import date
 
