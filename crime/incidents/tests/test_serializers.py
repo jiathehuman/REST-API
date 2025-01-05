@@ -73,7 +73,6 @@ class OffenseCategorySerializerTest(APITestCase):
 
     def test_OffenseCategorySerializer_valid_data(self):
         """Test that the serializer with valid data returns is_valid as true."""
-        # serializer = OffenseTypeSerializer(data = self.offense_type) # serialize
         self.assertTrue(self.offense_category_serializer.is_valid())
 
     def test_OffenseCategorySerializer_invalid_data(self):
