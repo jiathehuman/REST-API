@@ -3,12 +3,17 @@ This is a project done in fulfilment of CM3035 Advanced WEb Development. It invo
 
 **Live View**: http://crime-dev.ap-southeast-1.elasticbeanstalk.com/
 
-📢 Key Features
+## 📢 Key Features
 - 10 API endpoints to cover different aspects of the Crime dataset (eg. Finding neighbourhoods where drugs and aggravated assault are prevelant)
 - Swagger OpenAPI formal documentation
 - Hosting of application through AWS Elastic Beanstalk
 
-🤖 Technical Highlights
+## 🛠️ Tech Stacks
+- Django REST Framework
+- Bootstrap 5
+- Open API Schema for documentation
+
+## 🤖 Technical Highlights
 - Curating a normalised database with imported dataset
 - Using Django's REST Framework to create RESTful API endpoints
 
