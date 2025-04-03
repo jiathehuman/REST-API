@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CM3035 Midterms Submission</title>
+    {%load bootstrap5%} {%bootstrap_css%} {%bootstrap_javascript%} {% load static %}
+    <link rel="stylesheet" href="{% static 'incidents/style.css' %}">
+  </head>
+  <body>
+    <nav class="navbar navbar-dark bg-dark">
+      <!-- Navbar content -->
+      <div class="container-fluid">
+        <a href="/" class="nav-link text-white">HOME</a>
+      </div>
+    </nav>
+    {% block content %} {% endblock %}
+  </body>
+</html>
